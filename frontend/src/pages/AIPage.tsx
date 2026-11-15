@@ -66,26 +66,30 @@ export function AIMessage({ message }: { message: ChatMessage }) {
   return (
     <article className={`chat-message ${message.role}`}>
       <span className="message-avatar">
-        {isAssistant ? <Sparkles size={18} /> : <User size={18} />}
+        {isAssistant ? <Sparkles size={16} /> : <User size={16} />}
       </span>
-      <div className="message-bubble-content">
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <span className="message-author">
+      <div className="message-bubble-content flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <span className="message-author font-semibold">
             {isAssistant ? `Flight Surgeon AI · ${message.reply?.sourceLabel ?? 'onboard'}` : 'You'}
           </span>
-          {timeStr && <span className="text-[10px] text-slate-500 font-mono">{timeStr}</span>}
+          {timeStr && <span className="text-[11px] text-slate-500 font-mono">{timeStr}</span>}
         </div>
 
-        {message.text && <p className="leading-relaxed">{message.text}</p>}
+        {message.text && (
+          <div className="user-message-bubble inline-block bg-[#0f2438] border border-cyan-800/40 rounded-xl px-4 py-2.5 text-slate-100 text-[13.5px] leading-relaxed max-w-[85%] shadow-sm">
+            {message.text}
+          </div>
+        )}
 
         {message.reply && (
-          <div className="space-y-3 mt-2">
+          <div className="assistant-message-bubble space-y-3.5 mt-2 bg-[#081524] border border-[#1b354d] rounded-xl p-4 shadow-md text-slate-100">
             <div className="reply-section">
-              <strong>From your records</strong>
+              <strong>Clinical Observation &amp; Records</strong>
               <AIResponseRenderer content={message.reply.facts} />
             </div>
             <div className="reply-section">
-              <strong>What this means / Clinical Triage</strong>
+              <strong>Clinical Assessment &amp; Rationale</strong>
               <AIResponseRenderer content={message.reply.explanation} />
             </div>
             <div className="reply-section">
@@ -96,9 +100,9 @@ export function AIMessage({ message }: { message: ChatMessage }) {
                   NASA Reference: {message.reply.nasaReference}
                 </small>
               )}
-              <a className="text-link mt-2 inline-flex items-center gap-1" href="#missions">
-                <span>See Daily Activities</span>
-                <ArrowUpRight size={14} />
+              <a className="text-link mt-2.5 inline-flex items-center gap-1 text-xs text-cyan-300 hover:text-cyan-200" href="#missions">
+                <span>See Countermeasures &amp; Protocols</span>
+                <ArrowUpRight size={13} />
               </a>
             </div>
           </div>
@@ -483,9 +487,9 @@ export function AIPage({
             ))}
 
             {loading && (
-              <div className="chat-loading" role="status">
+              <div className="chat-loading flex items-center gap-2.5 p-3.5 my-2 rounded-lg bg-[#081726] border border-cyan-500/20 text-cyan-200 text-xs animate-pulse" role="status">
                 <Loader2 size={16} className="animate-spin text-cyan-400" />
-                <span>Flight Surgeon Assistant evaluating clinical context…</span>
+                <span className="font-medium">Flight Surgeon Assistant evaluating clinical telemetry context…</span>
               </div>
             )}
 
