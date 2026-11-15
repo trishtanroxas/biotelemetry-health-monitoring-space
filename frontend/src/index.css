@@ -497,7 +497,15 @@ input[type=range] { min-height: 44px; }
 .quick-action h3 { margin-top: 16px; }
 .quick-action p, .text-link { font-size: 14px; }
 .helper { font-size: 13px; }
-.checkin-workspace { max-width: 850px; margin: 0 auto; }
+.checkin-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; width: 100%; }
+@media(min-width: 1024px) {
+  .checkin-workspace { grid-template-columns: minmax(0, 1fr) 310px; }
+}
+@media(min-width: 1300px) {
+  .checkin-workspace { grid-template-columns: minmax(0, 1fr) 350px; gap: 28px; }
+}
+.checkin-primary { min-width: 0; }
+.checkin-sidebar { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 .checkin-form fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .wizard-progress { margin-bottom: 28px; }
 .wizard-progress > span { color: var(--muted); font-size: 13px; }
