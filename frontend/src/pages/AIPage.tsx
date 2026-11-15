@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowUp, ArrowUpRight, Sparkles, WifiOff, User } from 'lucide-react';
 import { flightAssistant, type AssistantContext } from '../services/ai';
 import type { AssistantReply } from '../types/wellness';

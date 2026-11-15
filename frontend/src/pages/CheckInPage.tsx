@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { SpaceCheckInFields } from '../components/SpaceCheckInFields';
 import type { SpaceEnvironment } from '../types/spaceWellness';
 import { Check, Save, ArrowLeft, ArrowRight } from 'lucide-react';

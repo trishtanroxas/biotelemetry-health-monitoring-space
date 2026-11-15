@@ -19,9 +19,11 @@ import type { Page } from './types/wellness';
 type ExtendedPage = Page | 'landing';
 
 type Telemetry = ReturnType<typeof useTelemetry>;
+const LANDING_SECTIONS = new Set(['overview', 'problem', 'autonomy', 'capabilities', 'architecture', 'science', 'team']);
+
 function getPage(): ExtendedPage {
   const hash = window.location.hash.slice(1);
-  if (hash === '' || hash === 'landing') return 'landing';
+  if (hash === '' || hash === 'landing' || LANDING_SECTIONS.has(hash)) return 'landing';
   return ['dashboard', 'checkin', 'analytics', 'missions', 'ai'].includes(hash) ? hash as Page : 'dashboard';
 }
 function Workspace({ telemetry: t, page }: { telemetry: Telemetry; page: Page }) {
@@ -67,8 +69,21 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const navigate = () => { setPage(getPage()); window.scrollTo({ top: 0 }); };
-    window.addEventListener('hashchange', navigate); return () => window.removeEventListener('hashchange', navigate);
+    const navigate = () => {
+      const nextPage = getPage();
+      setPage(nextPage);
+      const hash = window.location.hash.slice(1);
+      if (LANDING_SECTIONS.has(hash)) {
+        const targetElement = document.getElementById(hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+      }
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener('hashchange', navigate);
+    return () => window.removeEventListener('hashchange', navigate);
   }, []);
   useEffect(() => { 
     if (page === 'landing') {

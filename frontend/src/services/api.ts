@@ -1,4 +1,4 @@
-﻿import { Astronaut, VitalSigns, AlertItem, DiagnosticResult } from '../types/telemetry';
+import { Astronaut, VitalSigns, AlertItem, DiagnosticResult } from '../types/telemetry';
 
 export const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 

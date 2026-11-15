@@ -1,4 +1,5 @@
 import React from 'react';
+import biotelemetryLogo from '../assets/biotelemetry-logo.png';
 import { 
   ArrowRight, 
   ExternalLink,
@@ -39,9 +40,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             aria-label="BioTelemetry Home - Launch Dashboard"
           >
             <img 
-              src="/branding/biotelemetry-logo-full.png" 
-              alt="BioTelemetry - Human Health. Beyond Earth." 
+              src={biotelemetryLogo} 
+              alt="BioTelemetry — Human Health. Beyond Earth." 
               className="nav-logo-img"
+              draggable={false}
             />
           </button>
 
@@ -64,64 +66,65 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
       </header>
 
-      {/* SECTION 1B: Minimal Initial Hero Viewport */}
+      {/* SECTION 1B: Cohesive Cinematic Hero Viewport */}
       <section id="overview" className="hero-section">
-        <div className="hero-editorial">
+        <div className="hero-content-group">
+          {/* 1. Live Mission Status Telemetry Ticker */}
+          <div className="hero-status-strip animate-fade-in">
+            <div className="status-item">
+              <span className="live-dot" />
+              <span>MISSION STATUS: <strong>ACTIVE</strong></span>
+            </div>
+            <span className="strip-divider" />
+            <div className="status-item">
+              <Satellite className="h-3.5 w-3.5 text-cyan-400" />
+              <span>OPERATIONAL MODE: <strong>AUTONOMOUS</strong></span>
+            </div>
+            <span className="strip-divider" />
+            <div className="status-item">
+              <Radio className="h-3.5 w-3.5 text-blue-400" />
+              <span>EARTH LINK: <strong>SIMULATED</strong></span>
+            </div>
+            <span className="strip-divider" />
+            <div className="status-item">
+              <span className="text-emerald-400 font-bold">SYSTEM: ONLINE</span>
+            </div>
+          </div>
+
+          {/* 2. NASA International Space Apps Challenge 2026 Label */}
+          <div className="hero-eyebrow animate-slide-up">
+            <Sparkles className="h-4 w-4 text-cyan-400" />
+            <span>NASA INTERNATIONAL SPACE APPS CHALLENGE 2026</span>
+          </div>
+
+          {/* 3. Main Headline */}
           <h1 className="hero-headline animate-slide-up">
             HEALTH MONITORING<br />
             <span className="blue-electric-text">DEEP SPACE.</span>
           </h1>
-        </div>
-      </section>
 
-      {/* SECTION 1C: Introductory Platform Overview (Revealed on Scroll) */}
-      <section className="hero-intro-scroll-section">
-        {/* Live Mission Status Telemetry Ticker */}
-        <div className="hero-status-strip animate-fade-in">
-          <div className="status-item">
-            <span className="live-dot" />
-            <span>MISSION STATUS: <strong>ACTIVE</strong></span>
-          </div>
-          <span className="strip-divider" />
-          <div className="status-item">
-            <Satellite className="h-3.5 w-3.5 text-cyan-400" />
-            <span>OPERATIONAL MODE: <strong>AUTONOMOUS</strong></span>
-          </div>
-          <span className="strip-divider" />
-          <div className="status-item">
-            <Radio className="h-3.5 w-3.5 text-blue-400" />
-            <span>EARTH LINK: <strong>SIMULATED</strong></span>
-          </div>
-          <span className="strip-divider" />
-          <div className="status-item">
-            <span className="text-emerald-400 font-bold">SYSTEM: ONLINE</span>
-          </div>
-        </div>
+          {/* 4. Supporting Description */}
+          <p className="hero-subhead animate-slide-up-delayed">
+            An autonomous crew health monitoring architecture engineered to protect human life 
+            across the final frontier — even when Earth is millions of miles away.
+          </p>
 
-        <div className="hero-eyebrow animate-slide-up">
-          <Sparkles className="h-4 w-4 text-cyan-400" />
-          <span>NASA INTERNATIONAL SPACE APPS CHALLENGE 2026</span>
-        </div>
-
-        <p className="hero-subhead animate-slide-up-delayed">
-          An autonomous crew health monitoring architecture engineered to protect human life 
-          across the final frontier — even when Earth is millions of miles away.
-        </p>
-
-        <div className="hero-actions animate-slide-up-delayed">
-          <button onClick={onEnterApp} className="hero-btn-main">
-            <span>Explore the Platform</span>
-            <ArrowRight className="h-5 w-5" />
-          </button>
-          <a 
-            href="https://github.com/trishtanroxas/biotelemetry-health-monitoring-space" 
-            target="_blank" 
-            rel="noreferrer"
-            className="hero-btn-ghost"
-          >
-            <ExternalLink className="h-4 w-4" />
-            <span>View GitHub Source</span>
-          </a>
+          {/* 5. Explore the Platform and View GitHub Source Buttons */}
+          <div className="hero-actions animate-slide-up-delayed">
+            <button onClick={onEnterApp} className="hero-btn-main">
+              <span>Explore the Platform</span>
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <a 
+              href="https://github.com/trishtanroxas/biotelemetry-health-monitoring-space" 
+              target="_blank" 
+              rel="noreferrer"
+              className="hero-btn-ghost"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>View GitHub Source</span>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -509,9 +512,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               title="Launch Dashboard"
             >
               <img 
-                src="/branding/biotelemetry-logo-full.png" 
-                alt="BioTelemetry - Human Health. Beyond Earth." 
+                src={biotelemetryLogo} 
+                alt="BioTelemetry — Human Health. Beyond Earth." 
                 className="footer-logo-img"
+                draggable={false}
               />
             </button>
           </div>

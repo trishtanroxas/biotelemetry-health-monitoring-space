@@ -1,4 +1,4 @@
-﻿/* Run with: node --test tests/frontend.test.cjs
+/* Run with: node --test tests/frontend.test.cjs
  * TypeScript is compiled in memory. Storage-boundary tests use a strict table
  * adapter; actual IndexedDB migration and service-worker lifecycle need a browser.
  */
