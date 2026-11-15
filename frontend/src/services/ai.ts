@@ -1,4 +1,4 @@
-﻿import type { AssistantReply, CheckIn, MissionCompletion } from '../types/wellness';
+import type { AssistantReply, CheckIn, MissionCompletion } from '../types/wellness';
 import type { AlertItem, VitalSigns } from '../types/telemetry';
 import type { SpaceEnvironment } from '../types/spaceWellness';
 import { askFlightAssistantApi } from './api';
@@ -17,7 +17,13 @@ export interface AssistantContext {
   environment?: SpaceEnvironment;
   vitals?: VitalSigns;
 }
-export interface AssistantService { ask(question: string, context: AssistantContext): Promise<AssistantReply> }
+export interface AssistantService {
+  ask(
+    question: string,
+    context: AssistantContext,
+    history?: Array<{ role: string; text?: string; content?: string }>
+  ): Promise<AssistantReply>;
+}
 // Explicit projection excludes symptoms, pain location, discomfort notes and all
 // personal reflections. This demo sends nothing to any AI provider unless connected.
 export function buildAssistantContext(
@@ -103,30 +109,34 @@ export const demoAssistant: AssistantService = {
 };
 
 export const flightAssistant: AssistantService = {
-  async ask(question, context) {
+  async ask(question, context, history) {
     const trimmed = question.trim();
     if (!trimmed) throw new Error('Enter a question first.');
     if (!context.astronautId) throw new Error('Choose an astronaut before asking about saved records.');
     const latest = context.records[0];
     try {
       const moodScale = ['Very low', 'Low', 'Okay', 'Good', 'Great'].indexOf(latest?.mood ?? '') + 1;
-      const res = await askFlightAssistantApi(trimmed, {
-        astronaut_id: context.astronautId,
-        mission_zone: context.vitals?.mission_zone,
-        mission_day: context.vitals?.mission_day,
-        heart_rate: context.vitals?.heart_rate,
-        spo2: context.vitals?.spo2,
-        core_temp: context.vitals?.core_temp,
-        blood_glucose: latest?.metabolic?.bloodGlucoseMgDl ?? context.vitals?.blood_glucose,
-        radiation_rate: context.vitals?.radiation_rate,
-        mood: moodScale > 0 ? moodScale : undefined,
-        energy: latest ? Math.max(1, 6 - latest.fatigue) : undefined,
-        stress: latest?.stress,
-        sleep_hours: latest?.sleepHours,
-        pain_level: latest?.spaceWellness?.pain?.intensity,
-        hydration_ml: latest?.metabolic?.hydrationMl,
-        nutrition_quality: latest?.metabolic?.nutritionQuality,
-      });
+      const res = await askFlightAssistantApi(
+        trimmed,
+        {
+          astronaut_id: context.astronautId,
+          mission_zone: context.vitals?.mission_zone,
+          mission_day: context.vitals?.mission_day,
+          heart_rate: context.vitals?.heart_rate,
+          spo2: context.vitals?.spo2,
+          core_temp: context.vitals?.core_temp,
+          blood_glucose: latest?.metabolic?.bloodGlucoseMgDl ?? context.vitals?.blood_glucose,
+          radiation_rate: context.vitals?.radiation_rate,
+          mood: moodScale > 0 ? moodScale : undefined,
+          energy: latest ? Math.max(1, 6 - latest.fatigue) : undefined,
+          stress: latest?.stress,
+          sleep_hours: latest?.sleepHours,
+          pain_level: latest?.spaceWellness?.pain?.intensity,
+          hydration_ml: latest?.metabolic?.hydrationMl,
+          nutrition_quality: latest?.metabolic?.nutritionQuality,
+        },
+        history
+      );
       return {
         facts: res.summary,
         explanation: res.actions.join(' '),

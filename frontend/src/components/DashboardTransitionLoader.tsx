@@ -1,54 +1,26 @@
 import React, { useEffect, useState } from 'react';
+import biotelemetryMark from '../assets/biotelemetry-mark.png';
 
 interface LoadingScreenProps {
   onComplete?: () => void;
   minDuration?: number;
 }
 
-const STAGES = [
-  'Establishing onboard interface…',
-  'Initializing mission environment…',
-  'Preparing crew workspace…',
-  'Synchronizing local edge database…',
-  'Readying telemetry channels…'
-];
-
 export const DashboardTransitionLoader: React.FC<LoadingScreenProps> = ({
   onComplete,
-  minDuration = 1100
+  minDuration = 800
 }) => {
-  const [stageIndex, setStageIndex] = useState(0);
-  const [progress, setProgress] = useState(15);
   const [fadingOut, setFadingOut] = useState(false);
 
   useEffect(() => {
-    // Stage rotation interval
-    const stageTimer = setInterval(() => {
-      setStageIndex((prev) => (prev + 1) % STAGES.length);
-    }, 280);
-
-    // Progress bar animation
-    const progressTimer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) return 98;
-        return prev + Math.floor(Math.random() * 18) + 8;
-      });
-    }, 120);
-
-    // Completion timeout
     const exitTimer = setTimeout(() => {
-      setProgress(100);
       setFadingOut(true);
       setTimeout(() => {
         if (onComplete) onComplete();
       }, 250);
     }, minDuration);
 
-    return () => {
-      clearInterval(stageTimer);
-      clearInterval(progressTimer);
-      clearTimeout(exitTimer);
-    };
+    return () => clearTimeout(exitTimer);
   }, [minDuration, onComplete]);
 
   return (
@@ -56,41 +28,30 @@ export const DashboardTransitionLoader: React.FC<LoadingScreenProps> = ({
       className={`dashboard-loader-overlay ${fadingOut ? 'loader-fade-out' : ''}`}
       role="status"
       aria-live="polite"
-      aria-label="Initializing mission dashboard"
+      aria-label="Initializing mission interface"
     >
-      <div className="loader-backdrop-stars" />
-      <div className="loader-cyan-glow" />
-
-      <div className="loader-content-box">
-        {/* Orbital Scanning Ring with Official Logo */}
-        <div className="loader-logo-orbital">
-          <div className="orbital-ring ring-outer" />
-          <div className="orbital-ring ring-inner" />
-          <img 
-            src="/branding/biotelemetry-logo.png" 
-            alt="BioTelemetry" 
-            className="loader-logo-image"
-          />
+      <div className="loader-minimal-content">
+        {/* Official BioTelemetry Logo (Icon + Wordmark) */}
+        <div className="brand-lockup loader-brand-lockup">
+          <div className="brand-mark">
+            <img 
+              src={biotelemetryMark} 
+              alt="BioTelemetry Icon" 
+              className="nav-icon-img"
+              draggable={false}
+            />
+          </div>
+          <div className="brand-text">
+            <strong className="brand-title">Bio<span>Telemetry</span></strong>
+            <small className="brand-tagline">HUMAN HEALTH. BEYOND EARTH.</small>
+          </div>
         </div>
 
-        {/* Technical Title & Rotating Status */}
-        <div className="loader-typography">
-          <div className="loader-brand-title">INITIALIZING MISSION INTERFACE</div>
-          <div className="loader-stage-msg">{STAGES[stageIndex]}</div>
-        </div>
+        {/* Short loading message */}
+        <p className="loader-simple-message">Initializing mission interface...</p>
 
-        {/* Shimmering Progress Bar */}
-        <div className="loader-progress-track">
-          <div 
-            className="loader-progress-fill" 
-            style={{ width: `${Math.min(100, progress)}%` }}
-          />
-        </div>
-
-        <div className="loader-meta-foot">
-          <span>CREW WORKSPACE: AUTONOMOUS</span>
-          <span>LINK: LOCAL EDGE</span>
-        </div>
+        {/* Small animated cyan loading spinner */}
+        <div className="loader-cyan-spinner" aria-hidden="true" />
       </div>
     </div>
   );

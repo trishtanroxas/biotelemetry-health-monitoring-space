@@ -1,12 +1,14 @@
-﻿import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { LayoutDashboard, ClipboardCheck, BarChart3, Orbit, Sparkles, Wifi, WifiOff, ChevronRight, Volume2, VolumeX, Contrast, RefreshCw, ArrowLeft } from 'lucide-react';
 import type { Astronaut } from '../types/telemetry';
 import type { Page } from '../types/wellness';
+import { NotificationCenter } from './NotificationCenter';
+import { ToastContainer } from './ToastContainer';
 
 export const navigation = [
   { id: 'dashboard' as const, label: 'Home', shortLabel: 'Home', icon: LayoutDashboard },
   { id: 'checkin' as const, label: 'Check-In', shortLabel: 'Check-In', icon: ClipboardCheck },
-  { id: 'analytics' as const, label: 'My Health Trends', shortLabel: 'Trends', icon: BarChart3 },
+  { id: 'analytics' as const, label: 'Trends', shortLabel: 'Trends', icon: BarChart3 },
   { id: 'missions' as const, label: 'Daily Activities', shortLabel: 'Activities', icon: Orbit },
   { id: 'ai' as const, label: 'AI Assistant', shortLabel: 'Assistant', icon: Sparkles },
 ];
@@ -40,18 +42,82 @@ export function AppShell(props: ShellProps) {
       <div className="sidebar-footer"><span className="status-dot" /> SPACE APPS CHALLENGE 2026<small>Monitoring Human Health Beyond Earth</small></div>
     </aside>
     <div className="main-shell">
-      <header className="topbar">
-        <div className="topbar-left-wrap">
-          <a href="#landing" className="topbar-back-home" title="Return to Landing Page">
-            <ArrowLeft size={16} />
-            <span>Back to Home</span>
-          </a>
-          <a href="#dashboard" className="mobile-brand" aria-label="BioTelemetry Home"><BrandLogo compact /></a>
-          <div className="breadcrumb">Crew workspace <ChevronRight size={14} /><strong>{current.label}</strong></div>
+      {/* Consolidated Single-Row Sticky Header Container */}
+      <header className="unified-sticky-header">
+        <div className="header-row-main">
+          {/* LEFT SIDE: Back to Home, Mobile Brand, Breadcrumb */}
+          <div className="topbar-left-wrap">
+            <a href="#landing" className="topbar-back-home" title="Return to Landing Page">
+              <ArrowLeft size={16} />
+              <span>Back to Home</span>
+            </a>
+            <a href="#dashboard" className="mobile-brand" aria-label="BioTelemetry Home">
+              <BrandLogo compact />
+            </a>
+            <div className="breadcrumb">
+              Crew workspace <ChevronRight size={14} />
+              <strong>{current.label}</strong>
+              <span className="demo-experience-tag">
+                · {props.crewDemo ? 'sample crew' : 'selected crew'}
+              </span>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE: Connection status, Settings & connection, Notification bell, Crew avatar & dropdown */}
+          <div className="topbar-right">
+            <ConnectionStatus offline={props.offline} gateway={props.gateway} />
+
+            {props.pending > 0 && (
+              <button 
+                className="button secondary pending-records compact-pending" 
+                disabled={props.offline || props.syncing} 
+                onClick={props.sync}
+                title={`${props.pending} measurements not yet sent`}
+              >
+                <RefreshCw size={13} />
+                <span>{props.syncing ? 'Sending…' : `${props.pending} unsent`}</span>
+              </button>
+            )}
+
+            <details className="utility-settings header-settings-inline">
+              <summary>Settings & connection</summary>
+              <div className="utility-actions">
+                <button onClick={props.toggleSound} aria-pressed={props.sound}>
+                  {props.sound ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                  Sound {props.sound ? 'on' : 'off'}
+                </button>
+                <button onClick={props.toggleContrast} aria-pressed={props.contrast}>
+                  <Contrast size={16} />
+                  High contrast {props.contrast ? 'on' : 'off'}
+                </button>
+                <button onClick={props.toggleLos} aria-pressed={props.los}>
+                  <WifiOff size={15} />
+                  {props.los ? 'End offline test' : 'Test offline mode'}
+                </button>
+                <p className="helper">
+                  The offline test stores simulated measurements on this device. Reconnect to send them. Records stay here until the server confirms they were saved.
+                </p>
+              </div>
+            </details>
+
+            <NotificationCenter />
+
+            <div className="crew-select">
+              <span className="avatar">
+                {props.crew.find(a => a.id === props.activeId)?.name.split(' ').filter(s => s !== 'Dr.').map(s => s[0]).slice(0, 2).join('')}
+              </span>
+              <label>
+                <span className="sr-only">Select astronaut{props.crewDemo ? ' (demo crew)' : ''}</span>
+                <select aria-label="Select astronaut" value={props.activeId} onChange={e => props.selectCrew(e.target.value)}>
+                  {props.crew.map(member => <option value={member.id} key={member.id}>{member.name}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
         </div>
-        <div className="topbar-right"><ConnectionStatus offline={props.offline} gateway={props.gateway} /><div className="crew-select"><span className="avatar">{props.crew.find(a => a.id === props.activeId)?.name.split(' ').filter(s => s !== 'Dr.').map(s => s[0]).slice(0, 2).join('')}</span><label><span className="sr-only">Select astronaut{props.crewDemo ? ' (demo crew)' : ''}</span><select aria-label="Select astronaut" value={props.activeId} onChange={e => props.selectCrew(e.target.value)}>{props.crew.map(member => <option value={member.id} key={member.id}>{member.name}</option>)}</select></label></div></div>
       </header>
-      <div className="utility-bar"><span>Demo experience · {props.crewDemo ? 'sample crew' : 'selected crew'}</span>{props.pending > 0 && <button className="button secondary pending-records" disabled={props.offline || props.syncing} onClick={props.sync}><RefreshCw size={15} />{props.syncing ? 'Sending…' : `${props.pending} measurements not yet sent`}</button>}<details className="utility-settings"><summary>Settings & connection</summary><div className="utility-actions"><button onClick={props.toggleSound} aria-pressed={props.sound}>{props.sound ? <Volume2 size={17} /> : <VolumeX size={17} />}Sound {props.sound ? 'on' : 'off'}</button><button onClick={props.toggleContrast} aria-pressed={props.contrast}><Contrast size={17} />High contrast {props.contrast ? 'on' : 'off'}</button><button onClick={props.toggleLos} aria-pressed={props.los}><WifiOff size={15} />{props.los ? 'End offline test' : 'Test offline mode'}</button><p className="helper">The offline test stores simulated measurements on this device. Reconnect to send them. Records stay here until the server confirms they were saved.</p></div></details></div>
+
+      <ToastContainer />
       <main id="main-content" tabIndex={-1}>{props.children}</main>
       <footer className="page-footer"><span>BioTelemetry <span className="muted">/ Designed for the human side of exploration</span></span><span>SIMULATION ENVIRONMENT</span></footer>
     </div>

@@ -16,6 +16,15 @@ class Settings(BaseModel):
 
     NASA_API_KEY: str = os.getenv("NASA_API_KEY", "DEMO_KEY")
     CRON_SECRET: str = os.getenv("CRON_SECRET", "")
+
+    # Groq Cloud Configuration
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_BASE_URL: str = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+    GROQ_TRANSCRIPTION_MODEL: str = os.getenv(
+        "GROQ_TRANSCRIPTION_MODEL", "whisper-large-v3-turbo"
+    )
+
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
     GEMINI_FALLBACK_MODELS: str = os.getenv(

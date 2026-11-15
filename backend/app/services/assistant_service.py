@@ -581,6 +581,130 @@ async def _execute_gemini_request(
     return None, None
 
 
+async def _call_groq_chat(
+    prompt: str,
+    *,
+    system_instruction: str = _ASSISTANT_SYSTEM_INSTRUCTION,
+    history: Optional[List[Dict[str, str]]] = None,
+    max_output_tokens: int = 700,
+) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    api_key = (settings.GROQ_API_KEY or "").strip()
+    if not api_key:
+        return None, None
+
+    model = settings.GROQ_MODEL or "openai/gpt-oss-120b"
+    groq_url = f"{settings.GROQ_BASE_URL.rstrip('/')}/chat/completions"
+
+    full_system = (
+        f"{system_instruction} "
+        "You must respond in valid JSON format only, matching this exact structure: "
+        '{"summary": "string", "actions": ["string", "string"], "escalate_when": "string", "nasa_reference": "string", "sbar_text": "string or null"}. '
+        "Never include markdown formatting or conversational filler outside the JSON."
+    )
+
+    messages: List[Dict[str, str]] = [{"role": "system", "content": full_system}]
+
+    if history:
+        for turn in history[-6:]:  # Keep up to 6 turns for conversational context
+            role = turn.get("role", "user")
+            content = turn.get("content") or turn.get("text") or ""
+            if content and role in ("user", "assistant"):
+                messages.append({"role": role, "content": content})
+
+    messages.append({"role": "user", "content": f"{prompt}\nOutput valid JSON."})
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "response_format": {"type": "json_object"},
+        "temperature": 0.25,
+        "max_tokens": max_output_tokens,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(groq_url, json=payload, headers=headers)
+            if resp.status_code == 200:
+                data = resp.json()
+                choices = data.get("choices") or []
+                if choices:
+                    content = choices[0].get("message", {}).get("content", "").strip()
+                    if content.startswith("```"):
+                        content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content, flags=re.IGNORECASE).strip()
+                    parsed = json.loads(content)
+                    if isinstance(parsed, dict) and "summary" in parsed:
+                        return parsed, f"groq:{model}"
+            else:
+                logger.warning("Groq API returned status %s: %s", resp.status_code, resp.text)
+    except Exception as exc:
+        logger.warning("Groq chat completion call failed: %s", exc)
+
+    return None, None
+
+
+async def _call_groq_transcribe(
+    raw_bytes: bytes,
+    mime_type: str = "audio/webm",
+) -> Optional[AudioTranscribeResponse]:
+    api_key = (settings.GROQ_API_KEY or "").strip()
+    if not api_key:
+        return None
+
+    model = settings.GROQ_TRANSCRIPTION_MODEL or "whisper-large-v3-turbo"
+    transcribe_url = f"{settings.GROQ_BASE_URL.rstrip('/')}/audio/transcriptions"
+
+    # Map mime to filename extension for Whisper
+    ext = "webm"
+    if "wav" in mime_type:
+        ext = "wav"
+    elif "mp4" in mime_type or "m4a" in mime_type:
+        ext = "m4a"
+    elif "ogg" in mime_type:
+        ext = "ogg"
+    elif "mp3" in mime_type or "mpeg" in mime_type:
+        ext = "mp3"
+    elif "flac" in mime_type:
+        ext = "flac"
+
+    filename = f"audio.{ext}"
+
+    context_prompt = (
+        "BioTelemetry aerospace mission medical assistant. NASA OSDR, SANS, microgravity, "
+        "SpO2, heart rate variability, dosimeter, radiation, EVA, telemetry."
+    )
+
+    headers = {"Authorization": f"Bearer {api_key}"}
+    files = {"file": (filename, raw_bytes, mime_type)}
+    data = {
+        "model": model,
+        "prompt": context_prompt,
+        "response_format": "json",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            resp = await client.post(transcribe_url, headers=headers, files=files, data=data)
+            if resp.status_code == 200:
+                result = resp.json()
+                text = (result.get("text") or "").strip()
+                return AudioTranscribeResponse(
+                    transcript=text,
+                    source="groq-whisper",
+                    model=model,
+                )
+            else:
+                logger.warning("Groq Whisper API returned %s: %s", resp.status_code, resp.text)
+    except Exception as exc:
+        logger.warning("Groq Whisper call failed: %s", exc)
+
+    return None
+
+
 async def _call_gemini_json(
     prompt: str,
     image_b64: Optional[str] = None,
@@ -795,6 +919,32 @@ async def generate_assistant_response(
         summary_ctx,
         history_block,
     )
+    # 1. Primary AI Provider: Groq (openai/gpt-oss-120b)
+    if settings.GROQ_API_KEY:
+        groq_json, groq_model = await _call_groq_chat(
+            prompt,
+            system_instruction=_ASSISTANT_SYSTEM_INSTRUCTION,
+            history=history,
+            max_output_tokens=700,
+        )
+        if groq_json and isinstance(groq_json.get("summary"), str):
+            actions_list = groq_json.get("actions") or []
+            if not isinstance(actions_list, list):
+                actions_list = [str(actions_list)]
+            return AssistantResponse(
+                summary=groq_json["summary"].strip(),
+                actions=[str(a).strip() for a in actions_list[:4] if str(a).strip()],
+                escalate_when=str(groq_json.get("escalate_when", "Escalate to Ground Flight Surgeon if symptoms worsen.")),
+                nasa_reference=str(groq_json.get("nasa_reference", "NASA HRP & OSDR Flight Medical Reference")),
+                source="groq",
+                model=groq_model or settings.GROQ_MODEL,
+                suggested_actions=_suggest_actions_for_query(question, ctx, mode),
+                sbar_text=str(groq_json["sbar_text"]).strip() if groq_json.get("sbar_text") else (
+                    _build_sbar_downlink(ctx, question).sbar_text if mode == "sbar_downlink" else None
+                ),
+            )
+
+    # 2. Secondary AI Provider: Gemini
     ai_json, used_model = await _call_gemini_json(
         prompt,
         system_instruction=_ASSISTANT_SYSTEM_INSTRUCTION,
@@ -1209,16 +1359,26 @@ async def transcribe_audio_speech(
     mime_type: str = "audio/webm",
 ) -> Optional[AudioTranscribeResponse]:
     clean_b64 = (audio_base64 or "").split(",", 1)[-1].strip()
-    if not clean_b64 or not (settings.GEMINI_API_KEY or "").strip():
+    if not clean_b64:
         return None
     try:
         raw_bytes = base64.b64decode(clean_b64, validate=False)
     except Exception:
         return None
-    if len(raw_bytes) < 64 or len(raw_bytes) > 2_000_000:
+    if len(raw_bytes) < 32 or len(raw_bytes) > 10_000_000:
         return None
 
     norm_mime = _normalize_audio_mime(mime_type)
+
+    # 1. Primary Speech-to-Text: Groq Whisper (whisper-large-v3-turbo)
+    if settings.GROQ_API_KEY:
+        groq_result = await _call_groq_transcribe(raw_bytes, norm_mime)
+        if groq_result and groq_result.transcript:
+            return groq_result
+
+    # 2. Secondary Speech-to-Text: Gemini
+    if not (settings.GEMINI_API_KEY or "").strip():
+        return None
     audio_digest = hashlib.sha256(clean_b64.encode("ascii", errors="ignore")).hexdigest()[:24]
     cache_key = _build_cache_key("stt", _resolve_primary_model(), norm_mime, audio_digest)
 

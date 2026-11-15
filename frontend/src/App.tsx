@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { AppShell, EmptyState, navigation } from './components/AppShell';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
 import { CheckInPage } from './pages/CheckInPage';
@@ -14,6 +14,8 @@ import { LandingPage } from './pages/LandingPage';
 import { DashboardTransitionLoader } from './components/DashboardTransitionLoader';
 import { DashboardSkeleton } from './components/DashboardSkeleton';
 import { DashboardHomeView } from './components/dashboard/DashboardHomeView';
+import { NotificationProvider, useNotificationCenter } from './context/NotificationContext';
+import { soundService } from './services/sound';
 import type { Page } from './types/wellness';
 
 type ExtendedPage = Page | 'landing';
@@ -57,12 +59,38 @@ function Workspace({ telemetry: t, page }: { telemetry: Telemetry; page: Page })
     {!astronaut && <EmptyState title="No astronaut selected">Choose a crew member from the header.</EmptyState>}
   </>;
 }
-export function App() {
+function AppContent() {
   const telemetry = useTelemetry();
   const [page, setPage] = useState<ExtendedPage>(getPage);
   const [contrast, setContrast] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const closeDiagnostic = useCallback(() => telemetry.setDiagnostic(null), [telemetry.setDiagnostic]);
+  const { addNotification } = useNotificationCenter();
+  const seenAlertIds = useRef<Set<string>>(new Set());
+
+  // Automatically wire incoming telemetry alerts to notification center
+  useEffect(() => {
+    if (page === 'landing') return; // Do not process or fire notifications on landing page
+    if (telemetry.alerts && telemetry.alerts.length > 0) {
+      telemetry.alerts.forEach(alert => {
+        const alertKey = `${alert.astronaut_id}-${alert.alert_type}-${alert.timestamp}`;
+        if (!seenAlertIds.current.has(alertKey)) {
+          seenAlertIds.current.add(alertKey);
+          const isCritical = alert.severity === 'CRITICAL';
+          const astronaut = telemetry.crew.find(c => c.id === alert.astronaut_id);
+          addNotification({
+            title: isCritical ? 'Critical Telemetry Alert' : 'Physiological Warning',
+            description: `${astronaut ? `${astronaut.name}: ` : ''}${alert.message}`,
+            severity: isCritical ? 'CRITICAL' : 'WARNING',
+            astronautId: alert.astronaut_id,
+            category: 'telemetry',
+            actionLabel: 'Review Alert',
+            actionRoute: '#analytics'
+          });
+        }
+      });
+    }
+  }, [telemetry.alerts, telemetry.crew, addNotification, page]);
 
   const handleLaunchDashboard = useCallback(() => {
     setIsTransitioning(true);
@@ -86,6 +114,7 @@ export function App() {
     return () => window.removeEventListener('hashchange', navigate);
   }, []);
   useEffect(() => { 
+    soundService.setRoute(page);
     if (page === 'landing') {
       document.title = 'BioTelemetry · Deep Space Health Gateway';
     } else {
@@ -113,6 +142,14 @@ export function App() {
     <Workspace key={telemetry.activeId} telemetry={telemetry} page={page} />
     <DiagnosticsModal result={telemetry.diagnostic} onClose={closeDiagnostic} />
   </AppShell>;
+}
+
+export function App() {
+  return (
+    <NotificationProvider>
+      <AppContent />
+    </NotificationProvider>
+  );
 }
 export default App;
 

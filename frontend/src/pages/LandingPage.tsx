@@ -1,5 +1,6 @@
 import React from 'react';
-import biotelemetryLogo from '../assets/biotelemetry-logo.png';
+import biotelemetryMark from '../assets/biotelemetry-mark.png';
+import { PublicMissionGuideModal } from '../components/PublicMissionGuideModal';
 import { 
   ArrowRight, 
   ExternalLink,
@@ -39,12 +40,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             title="Launch BioTelemetry Dashboard"
             aria-label="BioTelemetry Home - Launch Dashboard"
           >
-            <img 
-              src={biotelemetryLogo} 
-              alt="BioTelemetry — Human Health. Beyond Earth." 
-              className="nav-logo-img"
-              draggable={false}
-            />
+            <div className="brand-lockup">
+              <div className="brand-mark">
+                <img 
+                  src={biotelemetryMark} 
+                  alt="BioTelemetry Icon" 
+                  className="nav-icon-img"
+                  draggable={false}
+                />
+              </div>
+              <div className="brand-text">
+                <strong className="brand-title">Bio<span>Telemetry</span></strong>
+                <small className="brand-tagline">HUMAN HEALTH. BEYOND EARTH.</small>
+              </div>
+            </div>
           </button>
 
           <nav className="nav-links hidden lg:flex" aria-label="Landing page sections">
@@ -435,47 +444,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         <div className="team-profiles-row">
           <div className="profile-card">
             <div className="profile-avatar-wrap ring-cyan">
-              <img src="/team/perez.png" alt="John Matthew Perez" className="profile-avatar-img" />
+              <img src="/team/perez.jpg" alt="John Matthew Perez" className="profile-avatar-img" />
             </div>
             <div className="profile-name">John Matthew Perez</div>
             <div className="profile-handle">@jmprz</div>
-            <div className="profile-role">TEAM OWNER • PHILIPPINES</div>
+            <div className="profile-role">Frontend Developer & UI/UX Dev</div>
           </div>
 
           <div className="profile-card">
             <div className="profile-avatar-wrap ring-purple">
-              <img src="/team/roxas.png" alt="Trishtan Alexis Roxas" className="profile-avatar-img" />
+              <img src="/team/roxas.jpg" alt="Trishtan Alexis Roxas" className="profile-avatar-img" />
             </div>
             <div className="profile-name">Trishtan Alexis Roxas</div>
             <div className="profile-handle">@alexthetan1925</div>
-            <div className="profile-role">CORE ARCHITECT • PHILIPPINES</div>
+            <div className="profile-role">Full-Stack Developer & Creative Technologist</div>
           </div>
 
           <div className="profile-card">
             <div className="profile-avatar-wrap ring-emerald">
-              <img src="/team/balaguer.png" alt="Joem Manuel M. Balaguer" className="profile-avatar-img" />
+              <img src="/team/balaguer.jpg" alt="Joem Manuel M. Balaguer" className="profile-avatar-img" />
             </div>
             <div className="profile-name">Joem Manuel M. Balaguer</div>
             <div className="profile-handle">@jomudesu</div>
-            <div className="profile-role">COLLABORATOR • PHILIPPINES</div>
+            <div className="profile-role">Full-Stack Developer</div>
           </div>
 
           <div className="profile-card">
             <div className="profile-avatar-wrap ring-blue">
-              <div className="profile-avatar-fallback">CL</div>
+              <img src="/team/librando.jpg" alt="Clarence Librando" className="profile-avatar-img" />
             </div>
-            <div className="profile-name">clarence librando</div>
+            <div className="profile-name">Clarence Librando</div>
             <div className="profile-handle">@clarencelibrando</div>
-            <div className="profile-role">COLLABORATOR • PHILIPPINES</div>
+            <div className="profile-role">Backend Developer & CI/CD Automation</div>
           </div>
 
           <div className="profile-card">
             <div className="profile-avatar-wrap ring-amber">
-              <div className="profile-avatar-fallback">RR</div>
+              <img src="/team/regero.jpg" alt="Renejule Regero" className="profile-avatar-img" />
             </div>
             <div className="profile-name">Renejule Regero</div>
             <div className="profile-handle">@rjregero03</div>
-            <div className="profile-role">COLLABORATOR • PHILIPPINES</div>
+            <div className="profile-role">Full-Stack Developer</div>
           </div>
         </div>
       </section>
@@ -511,12 +520,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               className="footer-logo-btn"
               title="Launch Dashboard"
             >
-              <img 
-                src={biotelemetryLogo} 
-                alt="BioTelemetry — Human Health. Beyond Earth." 
-                className="footer-logo-img"
-                draggable={false}
-              />
+              <div className="brand-lockup">
+                <div className="brand-mark">
+                  <img 
+                    src={biotelemetryMark} 
+                    alt="BioTelemetry Icon" 
+                    className="nav-icon-img"
+                    draggable={false}
+                  />
+                </div>
+                <div className="brand-text">
+                  <strong className="brand-title">Bio<span>Telemetry</span></strong>
+                  <small className="brand-tagline">HUMAN HEALTH. BEYOND EARTH.</small>
+                </div>
+              </div>
             </button>
           </div>
 
@@ -535,6 +552,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </div>
         </div>
       </footer>
+
+      {/* Floating Public AI Mission Guide */}
+      <PublicMissionGuideModal />
     </div>
   );
 };

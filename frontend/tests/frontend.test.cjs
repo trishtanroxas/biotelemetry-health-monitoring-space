@@ -117,7 +117,7 @@ test('responsive shell exposes all five routes, selected route, and accessible c
     const html = renderToStaticMarkup(React.createElement(AppShell, { page, crew: [{ id: 'A', name: 'Demo Crew' }], activeId: 'A', selectCrew: noop, crewDemo: true, offline: true, gateway: false, los: true, toggleLos: noop, pending: 2, syncing: false, sync: noop, sound: false, toggleSound: noop, contrast: false, toggleContrast: noop }, 'Content'));
     for (const route of ['dashboard','checkin','analytics','missions','ai']) assert.ok(html.includes(`href="#${route}"`));
     assert.equal((html.match(/aria-current="page"/g) || []).length, 2); assert.match(html, /Skip to content/); assert.match(html, /Offline · saved on this device/); assert.match(html, /Select astronaut/);
-    for (const label of ['Home', 'Check-In', 'My Health Trends', 'Daily Activities', 'AI Assistant']) assert.ok(html.includes(label));
+    for (const label of ['Home', 'Check-In', 'Trends', 'Daily Activities', 'AI Assistant']) assert.ok(html.includes(label));
   }
 });
 

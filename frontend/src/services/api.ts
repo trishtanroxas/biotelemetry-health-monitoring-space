@@ -143,10 +143,59 @@ export interface AssistantApiResponse {
   nasa_reference: string;
   source: string;
   model: string;
+  sbar_text?: string | null;
 }
 
-export const askFlightAssistantApi = (question: string, context: Record<string, unknown>) =>
-  request<AssistantApiResponse>('/assistant/ask', post({ question, context }));
+export const askFlightAssistantApi = (
+  question: string,
+  context: Record<string, unknown>,
+  history?: Array<{ role: string; text?: string; content?: string }>
+) =>
+  request<AssistantApiResponse>(
+    '/assistant/ask',
+    post({
+      question,
+      context,
+      history: history?.map(h => ({
+        role: h.role,
+        content: h.text || h.content || '',
+      })),
+      mode: 'chat',
+    })
+  );
+
+export interface AudioTranscribeResponse {
+  transcript: string;
+  source: string;
+  model: string;
+}
+
+export const transcribeAudioApi = (audioBase64: string, mimeType: string = 'audio/webm') =>
+  request<AudioTranscribeResponse>(
+    '/assistant/transcribe',
+    post({ audio_base64: audioBase64, mime_type: mimeType })
+  );
+
+export interface PublicGuideResponse {
+  reply: string;
+  source: string;
+  model: string;
+}
+
+export const askPublicMissionGuideApi = (
+  question: string,
+  history?: Array<{ role: string; content?: string; text?: string }>
+) =>
+  request<PublicGuideResponse>(
+    '/public/assistant/chat',
+    post({
+      question,
+      history: history?.map(h => ({
+        role: h.role,
+        content: h.content || h.text || '',
+      })),
+    })
+  );
 
 // Wellness Check-in Sync
 export const syncCheckInRemote = (payload: Record<string, unknown>) =>
