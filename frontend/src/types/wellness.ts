@@ -1,6 +1,13 @@
 import type { VitalSigns } from './telemetry';
 import type { SpaceWellnessV1 } from './spaceWellness';
 
+export interface MetabolicCheckIn {
+  bloodGlucoseMgDl?: number;
+  hydrationMl?: number;
+  nutritionQuality?: 'poor' | 'adequate' | 'optimal';
+  immuneSymptoms?: string[];
+}
+
 export interface CheckIn {
   id: string;
   astronautId: string;
@@ -16,6 +23,7 @@ export interface CheckIn {
   biometrics: VitalSigns | null;
   syncStatus: 'pending';
   spaceWellness?: SpaceWellnessV1;
+  metabolic?: MetabolicCheckIn;
 }
 export interface Mission {
   id: string;
@@ -37,4 +45,7 @@ export interface AssistantReply {
   facts: string;
   explanation: string;
   action: string;
+  sourceLabel?: string;
+  nasaReference?: string;
+  escalate?: string;
 }

@@ -592,3 +592,51 @@ input[type=range] { min-height: 44px; }
 input[type=datetime-local] { min-width: 0; max-width: 100%; }
 @media(min-width: 640px) { .environment-readings { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media(max-width: 639px) { .source-link { margin-left: 0; display: flex; } }
+
+/* AI live vitals strip */
+.ai-live-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--surface-alt, rgba(0,188,255,0.07));
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+.alert-pill-warning {
+  background: var(--warning, #f59e0b) !important;
+  color: #000 !important;
+  font-weight: 600;
+}
+
+/* Health score panel */
+.health-score-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 22px;
+  margin-top: 14px;
+}
+.health-score-display {
+  font-size: 2.6rem;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+/* Status pills */
+.pill-success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.pill-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.pill-critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}

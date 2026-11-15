@@ -6,7 +6,35 @@ import { sendQueuedTelemetry } from '../services/telemetryQueue';
 import type { AlertItem, Astronaut, DiagnosticResult, VitalSigns } from '../types/telemetry';
 
 export function simulatedVitals(id: string, anomaly = 'NONE'): VitalSigns {
-  return { astronaut_id: id, timestamp: new Date().toISOString(), heart_rate: anomaly === 'TACHYCARDIA' ? 132 : Math.round(65 + Math.random() * 8), spo2: anomaly === 'HYPOXIA' ? 87 : 98.4, core_temp: 36.8, radiation_rate: anomaly === 'RADIATION_SPIKE' ? 65 : 14.5, hrv: 52, respiration_rate: 14, battery_level: 96.5, ecg_samples: [] };
+  const hr = anomaly === 'TACHYCARDIA' ? 132 : Math.round(65 + Math.random() * 8);
+  const spo2 = anomaly === 'HYPOXIA' ? 87 : 98.4;
+  const rad = anomaly === 'RADIATION_SPIKE' ? 65 : 14.5;
+  const hrv = 52;
+  let score = 96;
+  if (spo2 < 90) score -= 35;
+  if (hr > 120) score -= 25;
+  if (rad > 30) score -= 20;
+  return {
+    astronaut_id: id,
+    timestamp: new Date().toISOString(),
+    heart_rate: hr,
+    spo2,
+    core_temp: 36.8,
+    radiation_rate: rad,
+    hrv,
+    systolic_bp: 118,
+    diastolic_bp: 78,
+    respiration_rate: 14,
+    battery_level: 96.5,
+    ecg_samples: [],
+    mission_zone: 'LEO_ISS',
+    mission_day: 14,
+    gravity_g: 0.0,
+    cumulative_dose_msv: 4.2,
+    overall_health_score: Math.max(10, score),
+    health_status: score >= 80 ? 'NOMINAL' : score >= 50 ? 'STRAINED' : 'CRITICAL',
+    blood_glucose: 94,
+  };
 }
 export function useTelemetry() {
   const [crew, setCrew] = useState<Astronaut[]>(demoCrew);
@@ -108,7 +136,7 @@ export function useTelemetry() {
   }
   async function diagnose() {
     setDiagnosing(true);
-    try { setDiagnostic(await runDiagnostics(activeId)); }
+    try { setDiagnostic(await runDiagnostics(activeId, 'LEO_ISS', 14, anomaly)); }
     catch { setError('Diagnostics require the FastAPI connection. Please retry when the gateway is available.'); }
     finally { setDiagnosing(false); }
   }

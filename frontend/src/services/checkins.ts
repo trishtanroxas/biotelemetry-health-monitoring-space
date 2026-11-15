@@ -1,5 +1,6 @@
 import { localDb } from '../db/localDb';
 import type { CheckIn } from '../types/wellness';
+import { syncCheckInRemote } from './api';
 import { notifyWellnessChange } from './wellnessEvents';
 import { validateSpaceRecord } from './spaceWellness';
 
@@ -22,6 +23,22 @@ export const checkins: CheckInService = {
     const error = validateCheckIn(record);
     if (error) throw new Error(error);
     await localDb.checkins.add(record);
+    // Background sync to backend — numeric/categorical fields; free-text notes remain local
+    void syncCheckInRemote({
+      client_id: record.id,
+      astronaut_id: record.astronautId,
+      recorded_at: record.createdAt,
+      mood: ['Very low', 'Low', 'Okay', 'Good', 'Great'].indexOf(record.mood) + 1 || undefined,
+      energy: Math.max(1, 6 - record.fatigue),
+      stress: record.stress,
+      sleep_hours: record.sleepHours,
+      pain_level: record.spaceWellness?.pain?.intensity,
+      blood_glucose_mg_dl: record.metabolic?.bloodGlucoseMgDl,
+      hydration_ml: record.metabolic?.hydrationMl,
+      nutrition_quality: record.metabolic?.nutritionQuality,
+      immune_symptoms: record.metabolic?.immuneSymptoms ?? [],
+      metrics: { sleepQuality: record.sleepQuality, exerciseMinutes: record.exerciseMinutes },
+    }).catch(() => { /* Background sync failure should not block offline-first local save */ });
   },
 };
 

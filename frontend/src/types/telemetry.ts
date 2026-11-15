@@ -23,6 +23,22 @@ export interface VitalSigns {
   battery_level?: number;
   ecg_samples?: number[];
   synced?: boolean;
+  telemetry_source?: 'simulated' | 'measured' | 'manual';
+  orbital_phase?: string;
+  iss_latitude?: number;
+  iss_longitude?: number;
+  iss_altitude_km?: number;
+  mission_zone?: string;
+  mission_day?: number;
+  distance_km?: number;
+  comms_latency_sec?: number;
+  gravity_g?: number;
+  cumulative_dose_msv?: number;
+  overall_health_score?: number;
+  health_status?: 'NOMINAL' | 'STRAINED' | 'COMPROMISED' | 'CRITICAL' | string;
+  blood_glucose?: number;
+  wbc_k_ul?: number;
+  hydration_pct?: number;
 }
 
 export interface AlertItem {
@@ -30,9 +46,21 @@ export interface AlertItem {
   astronaut_id: string;
   timestamp: string;
   severity: 'INFO' | 'WARNING' | 'CRITICAL';
-  alert_type: 'HYPOXIA' | 'TACHYCARDIA' | 'BRADYCARDIA' | 'RADIATION_SPIKE' | 'HEAT_STRESS';
+  alert_type: string;
   message: string;
   acknowledged: boolean;
+  trigger_metric?: string | null;
+  recommended_action?: string | null;
+  hazard_domain?: string | null;
+}
+
+export interface SpaceEnvironmentRisk {
+  domain: string;
+  hazard: string;
+  risk_level: 'LOW' | 'MODERATE' | 'HIGH' | 'SEVERE' | string;
+  summary: string;
+  countermeasure: string;
+  evidence_basis: string;
 }
 
 export interface DiagnosticResult {
@@ -43,5 +71,39 @@ export interface DiagnosticResult {
   radiation_risk: 'SAFE' | 'ELEVATED' | 'DANGEROUS';
   recommendations: string[];
   metrics_summary: Record<string, any>;
+  environment_risks?: SpaceEnvironmentRisk[];
 }
+
+export type SelfExamType = 'ocular_ultrasound' | 'dermal_radiation' | 'glucometer_nutrition';
+
+export interface ImageAssessmentRecord {
+  id: string;
+  astronautId: string;
+  examType: SelfExamType;
+  recordedAt: string;
+  severity: 'nominal' | 'warning' | 'critical' | string;
+  findings: string;
+  recommendedActions: string[];
+  groundConsultRequired: boolean;
+  analysisSource: string;
+  imageQuality: string;
+  thumbnailDataUrl?: string;
+}
+
+export type AlertType =
+  | 'HYPOXIA'
+  | 'TACHYCARDIA'
+  | 'BRADYCARDIA'
+  | 'RADIATION_SPIKE'
+  | 'HEAT_STRESS'
+  | 'HYPOTHERMIA'
+  | 'HYPERCAPNIA'
+  | 'ORTHOSTATIC_HYPOTENSION'
+  | 'AUTONOMIC_FATIGUE'
+  | 'SOLAR_STORM_SHELTER'
+  | 'DEEP_SPACE_DOSE'
+  | 'HYPOGLYCEMIA'
+  | 'HYPERGLYCEMIA'
+  | 'DEHYDRATION'
+  | 'IMMUNE_SUPPRESSION';
 
