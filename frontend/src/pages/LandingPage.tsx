@@ -39,8 +39,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             aria-label="BioTelemetry Home - Launch Dashboard"
           >
             <img 
-              src="/branding/biotelemetry-logo.png" 
-              alt="BioTelemetry" 
+              src="/branding/biotelemetry-logo-full.png" 
+              alt="BioTelemetry - Human Health. Beyond Earth." 
               className="nav-logo-img"
             />
           </button>
@@ -509,12 +509,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               title="Launch Dashboard"
             >
               <img 
-                src="/branding/biotelemetry-logo.png" 
-                alt="BioTelemetry" 
+                src="/branding/biotelemetry-logo-full.png" 
+                alt="BioTelemetry - Human Health. Beyond Earth." 
                 className="footer-logo-img"
               />
             </button>
-            <p>HUMAN HEALTH • BEYOND EARTH</p>
           </div>
 
           <div className="footer-links">
