@@ -645,24 +645,13 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   background: rgba(30, 64, 175, 0.15);
 }
 
-/* 1. Cinematic Sticky Header */
+/* 1. Natural In-Flow Navigation Header (Non-Sticky) */
 .landing-nav {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 50;
   width: 100%;
-  padding: 18px 36px;
+  padding: 22px 36px;
   background: transparent;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.nav-scrolled {
-  background: rgba(3, 7, 18, 0.85);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(30, 41, 59, 0.7);
-  padding: 12px 36px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
 .nav-inner {
@@ -1693,6 +1682,7 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
 }
 
 @media(max-width: 768px) {
+  .landing-nav { padding: 16px 20px; }
   .hero-headline { font-size: 38px; }
   .sim-dashboard-body { flex-direction: column; }
   .sim-beam { width: 100%; height: 40px; }

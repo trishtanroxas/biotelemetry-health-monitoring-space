@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   ArrowRight, 
   ExternalLink,
@@ -21,16 +21,7 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
-  const [scrolled, setScrolled] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState<'ISS' | 'MOON' | 'MARS'>('MARS');
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const scenarioDetails = {
     ISS: {
@@ -71,8 +62,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
       <div className="landing-glow glow-cyan" />
       <div className="landing-glow glow-blue" />
 
-      {/* SECTION 1: Sticky Navigation Header */}
-      <header className={`landing-nav ${scrolled ? 'nav-scrolled' : ''}`}>
+      {/* SECTION 1: Natural Document Flow Navigation Header */}
+      <header className="landing-nav">
         <div className="nav-inner">
           {/* Logo is Clickable -> Navigates to Dashboard */}
           <button 
