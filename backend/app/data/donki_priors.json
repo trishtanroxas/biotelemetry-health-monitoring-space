@@ -1,0 +1,154 @@
+{
+  "priors": {
+    "total_days": 2510,
+    "days_with_m_or_x_flare": 783,
+    "days_with_x_flare": 88,
+    "days_with_sep_storm": 101,
+    "days_with_kp_ge_5": 118,
+    "days_with_kp_ge_7": 35,
+    "p_sep_within_3d_given_x_flare": 0.409,
+    "p_kp_ge_5_within_3d_given_x_flare": 0.307
+  },
+  "recent_days": [
+    {
+      "date": "2026-11-01",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-02",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-03",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-04",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-05",
+      "flare_count": "1",
+      "m_class_count": "1",
+      "x_class_count": "0",
+      "max_flare_score": "35.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-06",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-07",
+      "flare_count": "3",
+      "m_class_count": "3",
+      "x_class_count": "0",
+      "max_flare_score": "19.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-08",
+      "flare_count": "3",
+      "m_class_count": "3",
+      "x_class_count": "0",
+      "max_flare_score": "17.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-09",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-10",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-11",
+      "flare_count": "1",
+      "m_class_count": "1",
+      "x_class_count": "0",
+      "max_flare_score": "17.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-12",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-13",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    },
+    {
+      "date": "2026-11-14",
+      "flare_count": "0",
+      "m_class_count": "0",
+      "x_class_count": "0",
+      "max_flare_score": "0.0",
+      "sep_count": "0",
+      "max_kp_index": "0.0",
+      "storm_level": "QUIET"
+    }
+  ]
+}

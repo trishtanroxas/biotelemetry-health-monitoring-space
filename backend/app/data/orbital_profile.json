@@ -1,0 +1,91 @@
+{
+  "summary": {
+    "sample_points": 288,
+    "pct_time_in_saa": 5.9,
+    "pct_time_high_latitude": 14.24,
+    "pct_time_eclipsed": 37.5,
+    "daylight_eclipse_transitions_per_24h": 32.0
+  },
+  "cycle_points": [
+    {
+      "latitude": -40.21277,
+      "longitude": 5.77227,
+      "altitude_km": 430.764,
+      "visibility": "daylight",
+      "in_saa": false,
+      "high_lat_exposure": false
+    },
+    {
+      "latitude": -12.86406,
+      "longitude": 34.60158,
+      "altitude_km": 418.074,
+      "visibility": "daylight",
+      "in_saa": false,
+      "high_lat_exposure": false
+    },
+    {
+      "latitude": 17.4982,
+      "longitude": 56.78832,
+      "altitude_km": 413.692,
+      "visibility": "daylight",
+      "in_saa": false,
+      "high_lat_exposure": false
+    },
+    {
+      "latitude": 43.60431,
+      "longitude": 88.4503,
+      "altitude_km": 418.738,
+      "visibility": "daylight",
+      "in_saa": false,
+      "high_lat_exposure": false
+    },
+    {
+      "latitude": 50.67571,
+      "longitude": 143.38653,
+      "altitude_km": 423.092,
+      "visibility": "eclipsed",
+      "in_saa": false,
+      "high_lat_exposure": true
+    },
+    {
+      "latitude": 31.14771,
+      "longitude": -173.61755,
+      "altitude_km": 422.328,
+      "visibility": "eclipsed",
+      "in_saa": false,
+      "high_lat_exposure": false
+    },
+    {
+      "latitude": 1.82264,
+      "longitude": -149.18279,
+      "altitude_km": 423.546,
+      "visibility": "eclipsed",
+      "in_saa": false,
+      "high_lat_exposure": false
+    },
+    {
+      "latitude": -27.85257,
+      "longitude": -125.70599,
+      "altitude_km": 431.64,
+      "visibility": "daylight",
+      "in_saa": false,
+      "high_lat_exposure": false
+    },
+    {
+      "latitude": -49.39964,
+      "longitude": -86.11967,
+      "altitude_km": 438.618,
+      "visibility": "daylight",
+      "in_saa": false,
+      "high_lat_exposure": false
+    },
+    {
+      "latitude": -46.04493,
+      "longitude": -30.10915,
+      "altitude_km": 434.149,
+      "visibility": "daylight",
+      "in_saa": false,
+      "high_lat_exposure": false
+    }
+  ]
+}

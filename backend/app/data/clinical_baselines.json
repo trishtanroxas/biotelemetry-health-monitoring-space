@@ -1,6 +1,44 @@
 {
-  "generated_at_utc": "2026-11-14T13:32:23.181381+00:00",
+  "generated_at_utc": "2026-11-14T17:32:38.951835+00:00",
   "human_clinical_baselines": {
+    "albumin_g_dl": {
+      "clinical_range_min": 3.6,
+      "clinical_range_max": 5.1,
+      "pre_flight": {
+        "n": 12,
+        "mean": 4.65,
+        "std": 0.2844,
+        "min": 4.2,
+        "max": 5.0
+      },
+      "post_flight_r1": {
+        "n": 4,
+        "mean": 4.5,
+        "std": 0.2944,
+        "min": 4.2,
+        "max": 4.9
+      },
+      "r1_vs_pre_pct_change": -3.23
+    },
+    "angpt1_npq": {
+      "clinical_range_min": null,
+      "clinical_range_max": null,
+      "pre_flight": {
+        "n": 22,
+        "mean": 11.7681,
+        "std": 6.1983,
+        "min": 2.1577,
+        "max": 18.3646
+      },
+      "post_flight_r1": {
+        "n": 7,
+        "mean": 12.36,
+        "std": 6.3559,
+        "min": 4.9463,
+        "max": 18.1473
+      },
+      "r1_vs_pre_pct_change": 5.03
+    },
     "bun_mg_dl": {
       "clinical_range_min": 7.0,
       "clinical_range_max": 25.0,
@@ -57,6 +95,25 @@
         "max": 1.15
       },
       "r1_vs_pre_pct_change": -3.97
+    },
+    "crp_pg_ml": {
+      "clinical_range_min": null,
+      "clinical_range_max": null,
+      "pre_flight": {
+        "n": 12,
+        "mean": 17712500.0,
+        "std": 21612887.3556,
+        "min": 1289600.0,
+        "max": 75749000.0
+      },
+      "post_flight_r1": {
+        "n": 4,
+        "mean": 30316775.0,
+        "std": 35723770.193,
+        "min": 9311500.0,
+        "max": 83617000.0
+      },
+      "r1_vs_pre_pct_change": 71.16
     },
     "glucose_mg_dl": {
       "clinical_range_min": 65.0,
@@ -209,6 +266,44 @@
         "max": 140.0
       },
       "r1_vs_pre_pct_change": -1.6
+    },
+    "vcam1_npq": {
+      "clinical_range_min": null,
+      "clinical_range_max": null,
+      "pre_flight": {
+        "n": 22,
+        "mean": 7.4758,
+        "std": 5.8145,
+        "min": 0.0,
+        "max": 13.2433
+      },
+      "post_flight_r1": {
+        "n": 7,
+        "mean": 8.3336,
+        "std": 5.5997,
+        "min": 1.1962,
+        "max": 13.0429
+      },
+      "r1_vs_pre_pct_change": 11.47
+    },
+    "vegfa_npq": {
+      "clinical_range_min": null,
+      "clinical_range_max": null,
+      "pre_flight": {
+        "n": 22,
+        "mean": 14.4563,
+        "std": 0.7727,
+        "min": 13.2863,
+        "max": 16.1521
+      },
+      "post_flight_r1": {
+        "n": 7,
+        "mean": 14.3894,
+        "std": 0.739,
+        "min": 13.6894,
+        "max": 15.6805
+      },
+      "r1_vs_pre_pct_change": -0.46
     },
     "wbc_k_ul": {
       "clinical_range_min": 3.8,

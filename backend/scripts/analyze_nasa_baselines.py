@@ -61,6 +61,11 @@ def analyze_human_clinical() -> Dict[str, Any]:
         "hemoglobin_value_percent": "hemoglobin_g_dl",
         "hematocrit_value_percent": "hematocrit_pct",
         "platelet_count_value_thousand_per_microliter": "platelets_k_ul",
+        "albumin_value_gram_per_deciliter": "albumin_g_dl",
+        "crp_concentration_picogram_per_milliliter": "crp_pg_ml",
+        "vcam1_concentration_npq": "vcam1_npq",
+        "vegfa_concentration_npq": "vegfa_npq",
+        "angpt1_concentration_npq": "angpt1_npq",
     }
 
     buckets: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
@@ -315,18 +320,58 @@ def analyze_space_weather_and_orbit() -> Dict[str, Any]:
     }
 
 
+def export_runtime_profiles(space_weather_and_orbit: Dict[str, Any]) -> None:
+    orbit_path = DATA_DIR / "orbital" / "iss_orbit_48h.csv"
+    with orbit_path.open("r", encoding="utf-8", newline="") as fh:
+        orbit_rows = list(csv.DictReader(fh))
+    # One ~93-minute ISS orbit spans ~10 sample points at 10-minute cadence
+    cycle_points = [
+        {
+            "latitude": float(r["latitude"]),
+            "longitude": float(r["longitude"]),
+            "altitude_km": float(r["altitude_km"]),
+            "visibility": r["visibility"],
+            "in_saa": r["in_saa"] == "True",
+            "high_lat_exposure": r["high_lat_exposure"] == "True",
+        }
+        for r in orbit_rows[-10:]
+    ]
+    orbital_out = OUT_PATH.parent / "orbital_profile.json"
+    orbital_out.write_text(
+        json.dumps({"summary": space_weather_and_orbit["iss_orbit_48h"], "cycle_points": cycle_points}, indent=2),
+        encoding="utf-8",
+    )
+
+    donki_path = DATA_DIR / "donki" / "donki_daily_summary.csv"
+    with donki_path.open("r", encoding="utf-8", newline="") as fh:
+        donki_rows = list(csv.DictReader(fh))
+    donki_out = OUT_PATH.parent / "donki_priors.json"
+    donki_out.write_text(
+        json.dumps(
+            {
+                "priors": space_weather_and_orbit["donki_2020_2026"],
+                "recent_days": donki_rows[-14:],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
+    space_weather_and_orbit = analyze_space_weather_and_orbit()
     report = {
         "generated_at_utc": datetime.now(tz=timezone.utc).isoformat(),
         "human_clinical_baselines": analyze_human_clinical(),
         "ocular_sans_patterns": analyze_ocular_sans(),
         "bone_muscle_patterns": analyze_bone_muscle(),
         "radiation_neuro_immune_patterns": analyze_radiation_neuro_immune(),
-        "space_weather_and_orbit_patterns": analyze_space_weather_and_orbit(),
+        "space_weather_and_orbit_patterns": space_weather_and_orbit,
     }
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    export_runtime_profiles(space_weather_and_orbit)
     print(json.dumps(report, indent=2))
     print(f"\nSaved calibrated baselines to {OUT_PATH.relative_to(ROOT_DIR)}")
 
