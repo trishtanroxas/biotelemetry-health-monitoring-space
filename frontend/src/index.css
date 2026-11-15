@@ -1700,3 +1700,358 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   .flow-arrow { display: none; }
   .footer-meta { align-items: flex-start; }
 }
+
+
+/* ==========================================================================
+   DASHBOARD TRANSITION LOADER & SKELETON
+   ========================================================================== */
+.dashboard-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #030712;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.loader-fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader-backdrop-stars {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+                    radial-gradient(1.5px 1.5px at 140px 70px, rgba(0,217,255,0.7), rgba(0,0,0,0)),
+                    radial-gradient(1px 1px at 280px 220px, #ffffff, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 350px 350px;
+  opacity: 0.35;
+}
+
+.loader-cyan-glow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, rgba(3, 7, 18, 0) 70%);
+  pointer-events: none;
+  animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+.loader-content-box {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 440px;
+  padding: 36px 32px;
+  text-align: center;
+  background: rgba(11, 22, 40, 0.85);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 217, 255, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.loader-logo-orbital {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbital-ring {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ring-outer {
+  inset: -10px;
+  border: 2px dashed rgba(0, 217, 255, 0.55);
+  animation: orbitClockwise 9s linear infinite;
+}
+
+.ring-inner {
+  inset: -2px;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  animation: orbitCounterClockwise 6s linear infinite;
+}
+
+@keyframes orbitClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbitCounterClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+.loader-logo-image {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(0, 217, 255, 0.5));
+}
+
+.loader-brand-title {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #00d9ff;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.loader-stage-msg {
+  font-size: 14px;
+  color: #f1f5f9;
+  font-weight: 500;
+  min-height: 22px;
+  margin-bottom: 22px;
+}
+
+.loader-progress-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.8);
+  overflow: hidden;
+  margin-bottom: 16px;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.loader-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7 0%, #00d9ff 50%, #38bdf8 100%);
+  box-shadow: 0 0 12px #00d9ff;
+  transition: width 0.15s ease-out;
+}
+
+.loader-meta-foot {
+  display: flex;
+  justify-content: space-between;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+/* Dashboard Skeleton View */
+.dashboard-skeleton-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-line,
+.skeleton-block,
+.skeleton-metric-card {
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.8) 25%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.8) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.8s infinite ease-in-out;
+  border: 1px solid rgba(30, 41, 59, 0.6);
+  border-radius: 8px;
+}
+
+.skeleton-eyebrow { width: 140px; height: 14px; }
+.skeleton-headline { width: 320px; height: 32px; border-radius: 10px; }
+.skeleton-subhead { width: 220px; height: 16px; margin-bottom: 10px; }
+.skeleton-checkin-banner { width: 100%; height: 80px; border-radius: 12px; }
+
+.skeleton-vitals-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.skeleton-metric-card {
+  height: 120px;
+  border-radius: 12px;
+}
+
+.skeleton-layout-split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.skeleton-large-panel { height: 380px; border-radius: 14px; }
+.skeleton-side-panel { height: 380px; border-radius: 14px; }
+
+/* Visual Aerospace Concept Hero Banner */
+.hero-aerospace-visual {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  border-radius: 20px;
+  background: rgba(7, 20, 38, 0.6);
+  border: 1px solid rgba(0, 217, 255, 0.25);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 217, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.aerospace-orbital-graphic {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbital-orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.orbital-orbit-ring.ring-1 {
+  inset: 0;
+  border: 1.5px dashed rgba(0, 217, 255, 0.5);
+  animation: orbitClockwise 22s linear infinite;
+}
+
+.orbital-orbit-ring.ring-2 {
+  inset: 24px;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  animation: orbitCounterClockwise 15s linear infinite;
+}
+
+.orbital-planet-core {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #0284c7 0%, #030712 85%);
+  border: 2px solid rgba(0, 217, 255, 0.7);
+  box-shadow: 0 0 35px rgba(0, 217, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.core-spec-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.orbital-station-marker {
+  position: absolute;
+  top: 10px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(0, 217, 255, 0.5);
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
+}
+
+.station-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00d9ff;
+  box-shadow: 0 0 6px #00d9ff;
+}
+
+.station-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  color: #00d9ff;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.aerospace-caption {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
+}
+
+/* Team Profile Avatars */
+.profile-avatar-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  background: #030712;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.profile-card:hover .profile-avatar-wrap {
+  transform: scale(1.08);
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 18px;
+  color: #ffffff;
+  background: #091522;
+}
+
+.nav-brand-button,
+.footer-logo-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  outline: none;
+}
+
+.nav-brand-button:focus-visible,
+.footer-logo-btn:focus-visible {
+  outline: 2px solid #00d9ff;
+  outline-offset: 4px;
+  border-radius: 4px;
+}

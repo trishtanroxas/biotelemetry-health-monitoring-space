@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Activity, ArrowRight, ArrowUpRight, ClipboardCheck, Heart, Wind, Thermometer, Radio, Waves, Sparkles, Orbit, Check, Circle, CalendarDays, ShieldCheck } from 'lucide-react';
 import { AppShell, EmptyState, MissionProgress, PageHeading, navigation } from './components/AppShell';
 import { Disclosure } from './components/WellnessUI';
@@ -18,6 +18,8 @@ import { SpaceEnvironmentPanel } from './components/SpaceEnvironment';
 import { buildAssistantContext } from './services/ai';
 import { localDate, missionCatalog } from './services/missions';
 import { LandingPage } from './pages/LandingPage';
+import { DashboardTransitionLoader } from './components/DashboardTransitionLoader';
+import { DashboardSkeleton } from './components/DashboardSkeleton';
 import type { Page } from './types/wellness';
 
 type ExtendedPage = Page | 'landing';
@@ -42,6 +44,12 @@ function Workspace({ telemetry: t, page }: { telemetry: Telemetry; page: Page })
   }
   const v = t.vitals;
   const todayRecord = [...wellness.records].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).find(record => localDate(new Date(record.createdAt)) === today);
+
+  // If initial crew or vitals are still assembling, render DashboardSkeleton
+  if (t.crew.length === 0) {
+    return <DashboardSkeleton />;
+  }
+
   return <>
     {wellness.error && <div className="error-box" role="alert">{wellness.error}<button onClick={() => void wellness.reload()}>Retry local records</button></div>}
     {wellness.loading && <div className="loading-line" role="status">Loading local wellness records…</div>}
@@ -67,7 +75,13 @@ export function App() {
   const telemetry = useTelemetry();
   const [page, setPage] = useState<ExtendedPage>(getPage);
   const [contrast, setContrast] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const closeDiagnostic = useCallback(() => telemetry.setDiagnostic(null), [telemetry.setDiagnostic]);
+
+  const handleLaunchDashboard = useCallback(() => {
+    setIsTransitioning(true);
+  }, []);
+
   useEffect(() => {
     const navigate = () => { setPage(getPage()); window.scrollTo({ top: 0 }); };
     window.addEventListener('hashchange', navigate); return () => window.removeEventListener('hashchange', navigate);
@@ -81,7 +95,17 @@ export function App() {
   }, [page]);
 
   if (page === 'landing') {
-    return <LandingPage onEnterApp={() => { window.location.hash = '#dashboard'; }} />;
+    return <>
+      <LandingPage onEnterApp={handleLaunchDashboard} />
+      {isTransitioning && (
+        <DashboardTransitionLoader 
+          onComplete={() => {
+            setIsTransitioning(false);
+            window.location.hash = '#dashboard';
+          }} 
+        />
+      )}
+    </>;
   }
 
   return <AppShell page={page} crew={telemetry.crew} activeId={telemetry.activeId} selectCrew={telemetry.setActiveId} crewDemo={telemetry.crewDemo} offline={telemetry.offline} gateway={telemetry.gateway} los={telemetry.los} toggleLos={() => telemetry.setLos(!telemetry.los)} pending={telemetry.pending} syncing={telemetry.syncing} sync={telemetry.sync} sound={telemetry.sound} toggleSound={() => telemetry.setSound(!telemetry.sound)} contrast={contrast} toggleContrast={() => setContrast(!contrast)}>
