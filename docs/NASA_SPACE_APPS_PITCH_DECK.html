@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioTelemetry · NASA Space Apps Pitch Deck</title>
+  <style>
+    :root {
+      --bg: #050d18;
+      --card-bg: #091728;
+      --border: #163654;
+      --cyan: #00d9ff;
+      --cyan-soft: rgba(0, 217, 255, 0.12);
+      --text: #ffffff;
+      --muted: #8ea8be;
+      --accent: #2dd4bf;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .deck-container {
+      width: 100%;
+      max-width: 1100px;
+      min-height: 640px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 40px rgba(0,217,255,0.08);
+      position: relative;
+    }
+    .slide { display: none; flex-direction: column; height: 100%; flex: 1; }
+    .slide.active { display: flex; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Header & Badges */
+    .slide-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(22, 54, 84, 0.8);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    .tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--cyan);
+      font-weight: 700;
+      background: var(--cyan-soft);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 217, 255, 0.3);
+    }
+    .slide-num {
+      font-family: monospace;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Titles */
+    h1 { font-size: 44px; font-weight: 800; letter-spacing: -1px; line-height: 1.15; margin-bottom: 12px; }
+    h1 span { color: var(--cyan); }
+    h2 { font-size: 26px; font-weight: 700; color: #e2f1fd; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+
+    /* Content Layouts */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    
+    .panel {
+      background: #081220;
+      border: 1px solid #162f49;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .panel h3 { font-size: 15px; color: var(--cyan); margin-bottom: 8px; font-weight: 700; }
+    .panel p { font-size: 13px; color: #b2c9dc; line-height: 1.55; }
+    .panel ul { list-style: none; font-size: 12.5px; color: #b2c9dc; line-height: 1.6; }
+    .panel ul li { margin-bottom: 6px; position: relative; padding-left: 14px; }
+    .panel ul li::before { content: "•"; position: absolute; left: 0; color: var(--cyan); }
+
+    /* Pipeline Workflow */
+    .flow-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .flow-card {
+      flex: 1;
+      background: #071424;
+      border: 1px solid #183d61;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: left;
+    }
+    .flow-arrow { color: var(--cyan); font-size: 20px; font-weight: bold; }
+    .flow-card .num { font-size: 11px; font-weight: 800; color: var(--cyan); margin-bottom: 4px; }
+    .flow-card .title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .flow-card .desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+    /* Controls Footer */
+    .deck-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 30px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(22, 54, 84, 0.8);
+    }
+    .meta-text { font-size: 11px; color: #5a758d; text-transform: uppercase; letter-spacing: 1px; }
+    .nav-btns { display: flex; gap: 10px; }
+    button.nav-btn {
+      background: #0d2238;
+      border: 1px solid #204c75;
+      color: #fff;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button.nav-btn:hover { background: var(--cyan); color: #000; border-color: var(--cyan); }
+    button.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+
+    <!-- SLIDE 1 -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-eyebrow">
+        <span class="tag">NASA SPACE APPS CHALLENGE 2026</span>
+        <span class="slide-num">01 / 07</span>
+      </div>
+      <div>
+        <span style="font-size: 13px; font-weight: 700; color: var(--cyan); letter-spacing: 2px;">AUTONOMOUS CREW BIO-RESILIENCE ARCHITECTURE</span>
+        <h1 style="margin-top: 10px;">Bio<span>Telemetry</span></h1>
+        <p class="subtitle" style="font-size: 18px; max-width: 800px; color: #cbe3f7;">
+          An offline-first, edge-native crew health monitoring gateway engineered for interplanetary missions where communication with Earth is latency-bound or completely severed.
+        </p>
+        <div class="grid-3" style="margin-top: 30px;">
+          <div class="panel">
+            <h3>Zero Cloud Dependency</h3>
+            <p>Full autonomous capture, triage, and 3D body maps execute on spacecraft hardware.</p>
+          </div>
+          <div class="panel">
+            <h3>NASA OSDR Calibrated</h3>
+            <p>Heuristic alerts grounded in microgravity physiological baselines from flight datasets.</p>
+          </div>
+          <div class="panel">
+            <h3>Opportunistic Ground Sync</h3>
+            <p>Idempotent asynchronous telemetry downlinks when deep space communication opens.</p>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 25px; font-size: 12px; color: #728ea6;">
+        Team BioTelemetry (Philippines) • John Matthew Perez • Trishtan Alexis Roxas • Joem Manuel M. Balaguer • Clarence Librando • Renejule Regero
+      </div>
+    </div>
+
+    <!-- SLIDE 2 -->
+    <div class="slide" id="slide-2">
+      <div class="slide-eyebrow">
+        <span class="tag">01 • THE CHALLENGE</span>
+        <span class="slide-num">02 / 07</span>
+      </div>
+      <div>
+        <h2>When Earth is Out of Reach: Deep Space Transit Risks</h2>
+        <p class="subtitle">Cloud-native telemedicine fails past Low Earth Orbit due to unavoidable physical and operational constraints.</p>
+        
+        <div class="grid-3">
+          <div class="panel">
+            <h3>Speed-of-Light Latency</h3>
+            <p>Mars transit introduces 3 to 22+ minutes of one-way delay (up to 44 min round-trip). Interactive ground doctor consultation is physically impossible during acute triage.</p>
+          </div>
+          <div class="panel">
+            <h3>Loss of Signal (LOS)</h3>
+            <p>Planetary occultation, solar conjunctions, and high-gain antenna maneuvers cause complete multi-day communication blackouts. Systems cannot rely on live cloud connections.</p>
+          </div>
+          <div class="panel">
+            <h3>Microgravity Hazards</h3>
+            <p>Headward fluid shifts induce SANS (Spaceflight-Associated Neuro-ocular Syndrome), cosmic ionizing radiation requires instant dosimetric tracking, and cardiovascular deconditioning escalates.</p>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 20px; background: rgba(0, 217, 255, 0.05); border-color: rgba(0, 217, 255, 0.3);">
+          <strong style="color: var(--cyan); font-size: 14px;">DESIGN QUESTION:</strong>
+          <p style="font-size: 14px; margin-top: 4px; color: #fff;">
+            How can an astronaut crew monitor, record, triage, and review multi-system biometric telemetry without depending on a continuous link to Earth?
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div class="slide" id="slide-3">
+      <div class="slide-eyebrow">
+        <span class="tag">02 • OUR CONCEPT</span>
+        <span class="slide-num">03 / 07</span>
+      </div>
+      <div>
+        <h2>A Health Station Operating at the Extreme Edge</h2>
+        <p class="subtitle">BioTelemetry shifts the clinical center of gravity onto the spacecraft, maintaining full operations through blackouts.</p>
+
+        <div class="flow-row">
+          <div class="flow-card">
+            <div class="num">01 / COLLECT</div>
+            <div class="title">Multimodal Capture</div>
+            <div class="desc">Lead-II ECG, SpO2, core temp, capillary glucose, and crew-entered wellness check-ins.</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-card">
+            <div class="num">02 / TRIAGE</div>
+            <div class="title">Edge Diagnostics</div>
+            <div class="desc">Rule-based baseline checks evaluate thresholds against NASA microgravity clinical ranges.</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-card">
+            <div class="num">03 / PRESERVE</div>
+            <div class="title">IndexedDB Storage</div>
+            <div class="desc">Zero data loss: records stay buffered in on-device database queues through any blackout.</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-card">
+            <div class="num">04 / DOWNLINK</div>
+            <div class="title">Opportunistic Sync</div>
+            <div class="desc">Idempotently sends structured SBAR clinical summaries to Earth when signal returns.</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 24px;">
+          <div class="panel">
+            <h3>Local-First Clinical Autonomy</h3>
+            <p>Every analysis, 3D anatomical visualization, and check-in draft functions with 0 kB of internet connectivity.</p>
+          </div>
+          <div class="panel">
+            <h3>Fail-Safe Coordination</h3>
+            <p>The cloud is treated as an asynchronous synchronization destination—not an operational dependency.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 -->
+    <div class="slide" id="slide-4">
+      <div class="slide-eyebrow">
+        <span class="tag">03 • PLATFORM CAPABILITIES</span>
+        <span class="slide-num">04 / 07</span>
+      </div>
+      <div>
+        <h2>Unified Cockpit for Crew Self-Monitoring</h2>
+        <p class="subtitle">Integrated clinical capabilities combined into one responsive astronaut cockpit.</p>
+
+        <div class="grid-3">
+          <div class="panel">
+            <h3>3D Interactive Body Map</h3>
+            <p>Three.js anatomical model visualizing 6 core organ systems with dynamic anomaly hotspots (SANS, cardiac, pulmonary, dermal).</p>
+          </div>
+          <div class="panel">
+            <h3>Real-Time ECG & Trends</h3>
+            <p>100 Hz Lead-II cardiac waveform visualization with rolling multi-vital trend charts (HR, SpO2, core temperature, radiation).</p>
+          </div>
+          <div class="panel">
+            <h3>Clinical Self-Exams</h3>
+            <p>Guided bilateral SANS ocular ultrasound scans, dermal radiation erythema camera captures, and nutrition intake logs.</p>
+          </div>
+          <div class="panel">
+            <h3>Circadian Wellness Wizard</h3>
+            <p>3-step check-in tracking sleep windows, fatigue ratings, psychological status, and auto-attached vitals.</p>
+          </div>
+          <div class="panel">
+            <h3>Speech & AI Assistant</h3>
+            <p>Hands-free voice recognition with interim transcription, powered by Groq Whisper & LLaMA-3.3 with offline rule fallbacks.</p>
+          </div>
+          <div class="panel">
+            <h3>Anti-Spam Alert Engine</h3>
+            <p>Intelligent alert deduplication limiting active notifications to 3 priority items with audible chimes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 -->
+    <div class="slide" id="slide-5">
+      <div class="slide-eyebrow">
+        <span class="tag">04 • TECHNICAL ARCHITECTURE</span>
+        <span class="slide-num">05 / 07</span>
+      </div>
+      <div>
+        <h2>Engineered for Harsh, Disconnected Environments</h2>
+        <p class="subtitle">A hardened PWA runtime backed by client-side storage and idempotent cloud synchronization.</p>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h3>Client-Side Architecture</h3>
+            <ul>
+              <li><strong>UI Framework:</strong> React 18, TypeScript, Vite, TailwindCSS.</li>
+              <li><strong>Offline Runtime:</strong> Workbox Service Worker precaching entire application shell and assets.</li>
+              <li><strong>Local Storage:</strong> IndexedDB via Dexie.js managing <code>vitalsQueue</code>, <code>checkins</code>, and <code>imagingAssessments</code>.</li>
+              <li><strong>3D Graphics:</strong> Three.js canvas optimized for low CPU/GPU power consumption.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h3>Backend & Cloud Sync</h3>
+            <ul>
+              <li><strong>FastAPI Gateway:</strong> High-throughput local REST API serving baseline calibrations and diagnostic engines.</li>
+              <li><strong>Cloud Target:</strong> Supabase PostgreSQL with Row Level Security (RLS) for multi-crew mission isolation.</li>
+              <li><strong>Idempotent Replay:</strong> Unconfirmed queue transmission receipts; records deleted only upon verified sync.</li>
+              <li><strong>Voice Pipeline:</strong> Web Speech API live stream + Groq Whisper Large-V3 Turbo.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 18px; padding: 12px 20px;">
+          <p style="font-size: 12px; color: var(--cyan); font-weight: 600;">
+            ✓ VERIFIED RELIABILITY: 40 of 40 automated unit tests passing across storage quotas, sleep calculations, and data isolation boundaries.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6 -->
+    <div class="slide" id="slide-6">
+      <div class="slide-eyebrow">
+        <span class="tag">05 • OPERATIONAL WORKFLOW</span>
+        <span class="slide-num">06 / 07</span>
+      </div>
+      <div>
+        <h2>Governed Clinical Loop & Patient Safety</h2>
+        <p class="subtitle">From an anomalous reading to an actionable countermeasure and structured ground downlink.</p>
+
+        <div class="grid-4" style="margin-bottom: 20px;">
+          <div class="panel" style="text-align: center;">
+            <div style="font-size: 24px; color: var(--cyan); font-weight: bold;">1</div>
+            <h3 style="margin-top: 8px;">Sensor Ingest</h3>
+            <p style="font-size: 12px;">BLE stream or crew check-in recorded locally.</p>
+          </div>
+          <div class="panel" style="text-align: center;">
+            <div style="font-size: 24px; color: var(--cyan); font-weight: bold;">2</div>
+            <h3 style="margin-top: 8px;">NASA Check</h3>
+            <p style="font-size: 12px;">Compared to microgravity ranges (NASA OSDR).</p>
+          </div>
+          <div class="panel" style="text-align: center;">
+            <div style="font-size: 24px; color: var(--cyan); font-weight: bold;">3</div>
+            <h3 style="margin-top: 8px;">Crew Action</h3>
+            <p style="font-size: 12px;">Prescribes ARED exercise, sleep shift, or SANS scan.</p>
+          </div>
+          <div class="panel" style="text-align: center;">
+            <div style="font-size: 24px; color: var(--cyan); font-weight: bold;">4</div>
+            <h3 style="margin-top: 8px;">Ground SBAR</h3>
+            <p style="font-size: 12px;">Transmits formatted clinical brief on downlink.</p>
+          </div>
+        </div>
+
+        <div class="panel" style="background: rgba(244, 63, 94, 0.05); border-color: rgba(244, 63, 94, 0.3);">
+          <h3 style="color: #f43f5e;">Clinical Governance & Safety Boundaries</h3>
+          <p style="font-size: 13px; color: #fecdd3;">
+            BioTelemetry does not diagnose or replace Flight Surgeons. All AI evaluations state probabilistic confidence, simulated demo measurements are strictly watermarked, and private reflective notes are excluded from telemetry downlinks.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7 -->
+    <div class="slide" id="slide-7">
+      <div class="slide-eyebrow">
+        <span class="tag">06 • IMPACT & ROADMAP</span>
+        <span class="slide-num">07 / 07</span>
+      </div>
+      <div>
+        <h2>Empowering Astronaut Resilience on the Journey to Mars</h2>
+        <p class="subtitle">Preserving clinical integrity across the void of interplanetary transit.</p>
+
+        <div class="grid-3">
+          <div class="panel">
+            <h3>Mission Resilience</h3>
+            <p>Crews maintain actionable physiological situational awareness during critical orbital insertions and communication blackouts.</p>
+          </div>
+          <div class="panel">
+            <h3>Data Continuity</h3>
+            <p>Guarantees complete chronological health dossiers for terrestrial epidemiological and longitudinal spaceflight research.</p>
+          </div>
+          <div class="panel">
+            <h3>Future Horizon</h3>
+            <p>Integration with medical-grade BLE wearables, on-device neural edge models for ultrasound segmentation, and WLAN mesh sync.</p>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 24px; text-align: center; padding: 25px; border-color: var(--cyan);">
+          <h3 style="font-size: 20px; color: #fff; margin-bottom: 6px;">Monitoring Human Health Beyond Earth.</h3>
+          <p style="font-size: 14px; color: var(--cyan); font-weight: 600;">
+            Autonomous • Resilient • Mission-Ready
+          </p>
+          <p style="margin-top: 12px; font-size: 12px; color: var(--muted); font-family: monospace;">
+            github.com/trishtanroxas/biotelemetry-health-monitoring-space
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Controls -->
+    <div class="deck-footer">
+      <div class="meta-text">BioTelemetry • NASA Space Apps 2026 Presentation</div>
+      <div class="nav-btns">
+        <button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">Previous</button>
+        <button class="nav-btn" id="next-btn" onclick="changeSlide(1)">Next</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 7;
+
+    function showSlide(n) {
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('slide-' + n);
+      if (target) target.classList.add('active');
+      document.getElementById('prev-btn').disabled = (n === 1);
+      document.getElementById('next-btn').disabled = (n === totalSlides);
+      currentSlide = n;
+    }
+
+    function changeSlide(direction) {
+      const next = currentSlide + direction;
+      if (next >= 1 && next <= totalSlides) {
+        showSlide(next);
+      }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space') changeSlide(1);
+      if (e.key === 'ArrowLeft') changeSlide(-1);
+    });
+
+    showSlide(1);
+  </script>
+</body>
+</html>
