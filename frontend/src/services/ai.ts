@@ -33,6 +33,7 @@ export function buildAssistantContext(
   completions: MissionCompletion[],
   environment?: SpaceEnvironment,
   vitals?: VitalSigns,
+  _assessments?: any,
 ): AssistantContext {
   return {
     astronautId,
