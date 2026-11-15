@@ -113,9 +113,9 @@ async def get_latest_telemetry(
         if existing is not None:
             if existing.severity != "CRITICAL" and alert.severity == "CRITICAL":
                 existing.acknowledged = False
+                existing.timestamp = alert.timestamp  # Escalate timestamp only on genuine escalation
             existing.severity = alert.severity
             existing.message = alert.message
-            existing.timestamp = alert.timestamp
             existing.trigger_metric = alert.trigger_metric
             existing.recommended_action = alert.recommended_action
             existing.hazard_domain = alert.hazard_domain

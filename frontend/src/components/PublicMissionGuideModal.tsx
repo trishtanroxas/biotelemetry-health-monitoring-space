@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Markdown from 'react-markdown';
 import { 
   Sparkles, 
   X, 
@@ -23,7 +24,7 @@ interface GuideMessage {
 const SUGGESTED_QUERIES = [
   'What is BioTelemetry?',
   'How does it work without internet?',
-  'What problem does this project solve?',
+  'What are the system innovations?',
   'What is the technology stack?',
 ];
 
@@ -35,7 +36,7 @@ export const PublicMissionGuideModal: React.FC = () => {
       id: 'welcome',
       role: 'assistant',
       content:
-        'Hello! I am the **BioTelemetry AI Mission Guide**. I can explain our autonomous astronaut health architecture, offline edge computing, and NASA Space Apps Challenge submission. What would you like to know?',
+        'Hello! I am the **BioTelemetry AI Mission Guide**.\n\nI can explain our offline-first astronaut health architecture, edge computing concept, and NASA Space Apps Challenge submission.\n\nWhat would you like to know?',
       timestamp: new Date().toISOString(),
     },
   ]);
@@ -73,7 +74,7 @@ export const PublicMissionGuideModal: React.FC = () => {
     setError('');
 
     try {
-      // Build lightweight payload for the public endpoint
+      // Build lightweight history payload for the public endpoint
       const historyPayload = currentHistory
         .filter(m => m.id !== 'welcome')
         .map(m => ({ role: m.role, content: m.content }));
@@ -138,15 +139,15 @@ export const PublicMissionGuideModal: React.FC = () => {
 
       {/* Floating Chat Window */}
       {isOpen && (
-        <div
-          className={`pointer-events-auto flex flex-col w-[380px] max-w-[calc(100vw-32px)] rounded-2xl border border-cyan-500/40 bg-[#06111e]/98 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(0,217,255,0.15)] overflow-hidden transition-all duration-300 ${
-            isMinimized ? 'h-14' : 'h-[530px] max-h-[80vh]'
+        <div 
+          className={`pointer-events-auto flex flex-col w-[92vw] sm:w-[460px] bg-[#071526]/98 border border-cyan-500/40 rounded-2xl shadow-[0_12px_45px_rgba(0,0,0,0.85)] backdrop-blur-2xl overflow-hidden transition-all duration-300 ${
+            isMinimized ? 'h-[58px]' : 'h-[620px] max-h-[85vh]'
           }`}
           role="dialog"
           aria-labelledby="guide-title"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-[#0a192c]/90 border-b border-slate-800 select-none">
+          <div className="flex items-center justify-between px-4 py-3 bg-[#0a1c30] border-b border-cyan-900/50">
             <div className="flex items-center gap-2.5">
               <div className="w-6 h-6 flex-shrink-0">
                 <img src={biotelemetryMark} alt="Logo" className="w-full h-full object-contain" />
@@ -187,7 +188,7 @@ export const PublicMissionGuideModal: React.FC = () => {
             <>
               {/* Messages Area */}
               <div 
-                className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs text-slate-200"
+                className="flex-1 overflow-y-auto p-4 space-y-4 text-xs text-slate-200"
                 role="log"
                 aria-live="polite"
               >
@@ -199,7 +200,7 @@ export const PublicMissionGuideModal: React.FC = () => {
                     }`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         msg.role === 'user'
                           ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/50'
                           : 'bg-slate-800 text-cyan-400 border border-slate-700'
@@ -209,16 +210,30 @@ export const PublicMissionGuideModal: React.FC = () => {
                     </div>
 
                     <div
-                      className={`p-3 rounded-xl max-w-[82%] leading-relaxed ${
+                      className={`p-3.5 rounded-xl max-w-[86%] sm:max-w-[84%] leading-relaxed ${
                         msg.role === 'user'
                           ? 'bg-cyan-600/25 border border-cyan-500/40 text-cyan-100 rounded-tr-none'
-                          : 'bg-[#0a1a2c]/90 border border-slate-800 text-slate-200 rounded-tl-none'
+                          : 'bg-[#0a1a2c]/95 border border-slate-800 text-slate-200 rounded-tl-none shadow-md'
                       }`}
                     >
-                      <div className="whitespace-pre-wrap font-sans text-xs">
-                        {msg.content}
-                      </div>
-                      <div className="mt-1 text-[9px] text-slate-500 text-right font-mono">
+                      {msg.role === 'user' ? (
+                        <div className="whitespace-pre-wrap font-sans text-xs">
+                          {msg.content}
+                        </div>
+                      ) : (
+                        <div className="markdown-body font-sans text-xs">
+                          <Markdown
+                            components={{
+                              a: ({ node, ...props }) => (
+                                <a {...props} target="_blank" rel="noopener noreferrer" />
+                              ),
+                            }}
+                          >
+                            {msg.content}
+                          </Markdown>
+                        </div>
+                      )}
+                      <div className="mt-2 text-[9px] text-slate-500 text-right font-mono">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>

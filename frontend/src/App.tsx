@@ -66,29 +66,56 @@ function AppContent() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const closeDiagnostic = useCallback(() => telemetry.setDiagnostic(null), [telemetry.setDiagnostic]);
   const { addNotification } = useNotificationCenter();
-  const seenAlertIds = useRef<Set<string>>(new Set());
+  // Track active alert episodes by fingerprint (astronaut_id:alert_type -> { id, severity, acknowledged })
+  const activeEpisodesRef = useRef<Map<string, { id: string; severity: string; acknowledged: boolean }>>(new Map());
 
-  // Automatically wire incoming telemetry alerts to notification center
+  // Automatically wire incoming telemetry alerts to notification center with deduplication & lifecycle
   useEffect(() => {
     if (page === 'landing') return; // Do not process or fire notifications on landing page
-    if (telemetry.alerts && telemetry.alerts.length > 0) {
-      telemetry.alerts.forEach(alert => {
-        const alertKey = `${alert.astronaut_id}-${alert.alert_type}-${alert.timestamp}`;
-        if (!seenAlertIds.current.has(alertKey)) {
-          seenAlertIds.current.add(alertKey);
-          const isCritical = alert.severity === 'CRITICAL';
-          const astronaut = telemetry.crew.find(c => c.id === alert.astronaut_id);
-          addNotification({
-            title: isCritical ? 'Critical Telemetry Alert' : 'Physiological Warning',
-            description: `${astronaut ? `${astronaut.name}: ` : ''}${alert.message}`,
-            severity: isCritical ? 'CRITICAL' : 'WARNING',
-            astronautId: alert.astronaut_id,
-            category: 'telemetry',
-            actionLabel: 'Review Alert',
-            actionRoute: '#analytics'
-          });
-        }
-      });
+    if (!telemetry.alerts) return;
+
+    const currentAlertTypes = new Set<string>();
+
+    telemetry.alerts.forEach(alert => {
+      // Stable episode fingerprint: one active episode per astronaut + alert_type
+      const episodeKey = `${alert.astronaut_id}:${alert.alert_type}`;
+      currentAlertTypes.add(episodeKey);
+
+      const existing = activeEpisodesRef.current.get(episodeKey);
+      const isCritical = alert.severity === 'CRITICAL';
+      const isEscalation = existing && existing.severity !== 'CRITICAL' && isCritical;
+      const isNewEpisode = !existing;
+
+      // Only notify when it is a brand-new episode OR when an existing alert escalates to CRITICAL
+      if (isNewEpisode || isEscalation) {
+        activeEpisodesRef.current.set(episodeKey, {
+          id: alert.id,
+          severity: alert.severity,
+          acknowledged: alert.acknowledged,
+        });
+
+        const astronaut = telemetry.crew.find(c => c.id === alert.astronaut_id);
+        addNotification({
+          title: isCritical ? 'Critical Telemetry Alert' : 'Physiological Warning',
+          description: `${astronaut ? `${astronaut.name}: ` : ''}${alert.message}`,
+          severity: isCritical ? 'CRITICAL' : 'WARNING',
+          astronautId: alert.astronaut_id,
+          category: 'telemetry',
+          actionLabel: 'Review Alert',
+          actionRoute: '#analytics',
+        });
+      } else if (existing) {
+        // Update tracked state without re-triggering toast or notification
+        existing.acknowledged = alert.acknowledged;
+        existing.severity = alert.severity;
+      }
+    });
+
+    // Clean up resolved alert episodes so returning conditions can notify freshly
+    for (const key of Array.from(activeEpisodesRef.current.keys())) {
+      if (!currentAlertTypes.has(key)) {
+        activeEpisodesRef.current.delete(key);
+      }
     }
   }, [telemetry.alerts, telemetry.crew, addNotification, page]);
 

@@ -311,36 +311,50 @@ response validation, and offline checklist fallback.
 
 ## 3.5 Clinical Decision Support and Flight Surgeon Assistant
 
-BioTelemetry includes a clinical decision-support concept intended to
-summarize available health context and provide structured
-recommendations.
+### Edge-side Processing and Decision Support
 
-The technical specification describes:
+BioTelemetry incorporates an onboard processing layer that evaluates physiological measurements locally instead of requiring every reading to be transmitted to Earth for analysis.
 
--   Aerospace SBAR formatting: Situation, Background, Assessment,
-    Recommendation.
--   Clinical context drawn from available telemetry and wellness
-    records.
--   Recommended actions and countermeasures.
--   Escalation conditions (`escalate_when`).
--   Privacy filtering before external AI processing.
--   Deterministic fallback rules during offline operation.
+**Core capabilities:**
 
-The branch report states that the Flight Assistant is connected to
-FastAPI through `/api/v1/assistant/ask`, with telemetry context, OSDR
-references, and onboard fallback.
+1. **Deterministic Rule-Based Analysis**
+   - Evaluates incoming physiological measurements against configured aerospace thresholds.
+   - Identifies potentially abnormal readings in real time without external network round-trips.
+   - Detects supported conditions such as hypoxia indicators ($SpO_2 < 90\%$), tachycardia ($HR > 110\text{ BPM}$), bradycardia, and acute radiation threshold exceedances ($> 0.50\,\mu\text{Sv/h}$).
+   - Generates alerts locally when configured clinical criteria are met.
+
+2. **Real-Time Telemetry Evaluation**
+   - Processes incoming sensor or simulated telemetry samples continuously.
+   - Updates monitoring indicators and physiological trend buffers.
+   - Evaluates changes in physiological measurements.
+   - Avoids unnecessary repeated alert generation through stable episode tracking.
+
+3. **Autonomous Alert Management**
+   - Generates alerts without requiring continuous ground communication or cloud availability.
+   - Maintains alert history locally in IndexedDB for ongoing crew review.
+   - Supports alert acknowledgment and resolution with deduplication.
+   - Prevents duplicate notifications for the same active condition using stateful episode fingerprinting.
+
+4. **Decision Support**
+   - Presents detected anomalies alongside relevant measurements and contextual trends.
+   - Helps crew members understand potentially concerning changes during deep-space operations.
+   - Formats clinical recommendations using aerospace SBAR structure (Situation, Background, Assessment, Recommendation).
+   - Provides structured information that can support communication with ground-based medical personnel when signal links open.
+
+5. **AI-Assisted Interpretation**
+   - The Flight Surgeon Assistant uses available telemetry context to provide consultative explanations.
+   - Distinguishes deterministic local processing from cloud-based Groq AI inference (`openai/gpt-oss-120b`).
+   - Grounded rule triage remains 100% available offline, while conversational generative AI operates whenever satellite or cloud gateway connections are active.
 
 **Safety requirements:**
 
--   The assistant must not invent missing telemetry.
--   It must distinguish observations from interpretations.
--   It must not replace the deterministic analyzer.
--   It must not present generated responses as a confirmed diagnosis.
--   It must explain when information is simulated, unavailable, or
-    stale.
--   It must preserve privacy and avoid sending unnecessary identifiers
-    or diary content to an external model.
--   It must provide a fallback when the AI provider is unavailable.
+- The assistant must not invent missing telemetry.
+- It must distinguish observations from interpretations.
+- It must not replace the deterministic analyzer.
+- It must not present generated responses as a confirmed diagnosis.
+- It must explain when information is simulated, unavailable, or stale.
+- It must preserve privacy and avoid sending unnecessary identifiers or diary content to an external model.
+- It must provide a deterministic fallback when the AI provider is unavailable.
 
 ## 3.6 Mission Zone and Communication-Latency Modeling
 
@@ -572,19 +586,44 @@ Expected offline workflow:
 
 ## 4.3 Local Persistence Stores
 
-The technical specification identifies five IndexedDB stores:
+### On-board Data Storage
 
-  Store                  Purpose
-  ---------------------- -----------------------------------------------
-  `vitalsQueue`          Unsent telemetry records
-  `alertsStore`          Active and historical alert episodes
-  `checkins`             Crew wellness self-assessments
-  `missionCompletions`   Daily countermeasure and activity completion
-  `imagingAssessments`   Locally cached imaging and assessment records
+BioTelemetry uses IndexedDB, managed through Dexie.js (`SpaceBiotelemetryDB`), as its primary client-side persistence layer. This allows the spacecraft's health-monitoring interface to retain telemetry records, health check-ins, and operational alerts locally without depending on continuous communication with Earth.
 
-The initial concept calls the database `SpaceBiotelemetryDB`. The exact
-database name, schema version, migrations, and store definitions must be
-checked in the implementation.
+**Core capabilities:**
+
+1. **Persistent Local Storage**
+   - Telemetry measurements are stored locally in IndexedDB as structured records.
+   - Crew check-ins and wellness records remain accessible and editable during connectivity interruptions.
+   - Alerts and operational records are retained for subsequent review, analysis, and post-LOS synchronization.
+
+2. **Structured Database Organization**
+
+   BioTelemetry structures client persistence across dedicated stores (schema version 2):
+
+   - **`vitalsQueue`**  
+     Stores raw physiological measurements (heart rate, SpO2, core temperature, blood pressure, respiration rate, and HRV) marked with `syncedToCloud: boolean` flags for offline buffering and batch reconciliation.
+   
+   - **`alertsStore`**  
+     Stores locally generated clinical and operational alerts (hypoxia, tachycardia, radiation spikes) indexed by `astronaut_id`, `timestamp`, and `acknowledged` status.
+
+   - **`checkins`**  
+     Stores crew-submitted wellness questionnaires, subjective symptom logs, and sleep evaluations, keyed by `astronautId`, `createdAt`, and `syncStatus`.
+
+   - **`missionCompletions`**  
+     Records completed mission activities, physical countermeasures, and daily operational routines, indexed by composite `key` (`astronautId:activityId:date`).
+
+3. **Offline-First Operation**
+   - Allows local data entry and real-time dashboard visualization without an active internet connection.
+   - Preserves unsynchronized records across browser refreshes and offline reloads via PWA Service Worker caching.
+   - Automatically supports bulk synchronization (`POST /api/v1/telemetry/sync-batch` and `POST /api/v1/wellness/checkins`) when ground connectivity is re-established.
+
+4. **Data Integrity and Recovery**
+   - Employs Dexie.js ACID-compliant IndexedDB transactions to ensure atomic record creation without partial database corruption.
+   - Implements draft recovery for multi-step check-in forms so in-progress astronaut evaluations are not lost during mission tasks.
+   - Prevents duplicate synchronization through local `syncedToCloud` state validation and idempotency safeguards.
+
+> *Note on Reliability Limits:* While IndexedDB provides durable local browser storage, physical client integrity remains subject to host storage quotas and device hardware availability; power-failure safety is bounded by the underlying operating system file-system guarantees.
 
 ## 4.4 Service Worker and Offline Caching
 

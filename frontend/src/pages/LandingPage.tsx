@@ -355,19 +355,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         <div className="pillars-grid">
           <div className="pillar-block">
             <h4>1. Zero-Ground Autonomy</h4>
-            <p>Client-side diagnostics continue functioning with 100% feature parity during telemetry dropouts.</p>
+            <p>Deterministic rule-based clinical evaluation continues functioning onboard with 100% operational parity during communication loss.</p>
           </div>
           <div className="pillar-block">
-            <h4>2. NASA Baseline Calibration</h4>
-            <p>Calibrated using spaceflight data from the NASA Open Science Data Repository (OSDR).</p>
+            <h4>2. On-board Data Storage</h4>
+            <p>Employs browser IndexedDB (<code>SpaceBiotelemetryDB</code> via Dexie.js) to persist <code>vitalsQueue</code>, <code>alertsStore</code>, and crew check-ins during LOS.</p>
           </div>
           <div className="pillar-block">
-            <h4>3. IndexedDB to Supabase Synchronization</h4>
-            <p>Automatic batch synchronization resolves offline telemetry logs once signal links restore.</p>
+            <h4>3. Delayed Ground Synchronization</h4>
+            <p>Automatic batch reconciliation resolves buffered telemetry logs and crew assessments with Supabase PostgreSQL once signal links restore.</p>
           </div>
           <div className="pillar-block">
-            <h4>4. Spaceflight Ergonomics</h4>
-            <p>Glove-friendly controls, high-contrast helmet visor filtering, and synthesized audio alarms.</p>
+            <h4>4. Edge Decision Support</h4>
+            <p>Combines local threshold evaluation with consultative SBAR guidance and hybrid GroqCloud AI when satellite gateways are reachable.</p>
           </div>
         </div>
       </section>

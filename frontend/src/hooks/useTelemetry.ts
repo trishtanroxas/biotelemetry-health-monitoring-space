@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { acknowledgeAlert, demoCrew, fetchAlerts, fetchAstronauts, fetchLatestTelemetry, runDiagnostics, syncOfflineBatch } from '../services/api';
 import { localDb } from '../db/localDb';
 import { soundService } from '../services/sound';
@@ -14,6 +14,7 @@ export function useTelemetry() {
   const [activeId, setActiveId] = useState('ASTRO-01');
   const [vitals, setVitals] = useState<VitalSigns>(() => simulatedVitals('ASTRO-01'));
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const lastActiveCriticalRef = useRef<Set<string>>(new Set());
   const [anomaly, setAnomaly] = useState('NONE');
   const [los, setLos] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
@@ -61,13 +62,22 @@ export function useTelemetry() {
           try {
             const record = await fetchLatestTelemetry(activeId, anomaly);
             if (!alive) return;
-            setVitals(record); setGateway(true); soundService.playBlip();
+            setVitals(record); setGateway(true);
             try {
               const observations = await fetchAlerts();
               if (!alive) return;
               setAlerts(previous => [...new Map([...previous, ...observations.filter(a => a.astronaut_id === activeId)].map(a => [a.id, a])).values()].sort((a, b) => b.timestamp.localeCompare(a.timestamp)));
               void localDb.alertsStore.bulkPut(observations).catch(() => { if (alive) setError('Observations received, but local observation history could not be saved.'); });
-              if (observations.some(a => a.astronaut_id === activeId && a.severity === 'CRITICAL' && !a.acknowledged)) soundService.playEmergencyAlarm();
+              
+              // Only trigger emergency alarm when an unacknowledged CRITICAL alert is newly discovered
+              const currentUnackedCriticals = observations
+                .filter(a => a.astronaut_id === activeId && a.severity === 'CRITICAL' && !a.acknowledged)
+                .map(a => `${a.id}-${a.alert_type}`);
+              const hasNewCritical = currentUnackedCriticals.some(k => !lastActiveCriticalRef.current.has(k));
+              if (hasNewCritical) {
+                soundService.playEmergencyAlarm();
+              }
+              lastActiveCriticalRef.current = new Set(currentUnackedCriticals);
             } catch { if (alive) setError('Observation feed is unavailable. Previously received observations are retained.'); }
           } catch {
             if (!alive) return;

@@ -1,14 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { NotificationItem, NotificationPreferences, NotificationSeverity } from '../types/notifications';
 import { soundService } from '../services/sound';
 
-interface ToastItem extends NotificationItem {
+export interface ToastItem extends NotificationItem {
   toastId: string;
 }
 
 interface NotificationContextType {
   notifications: NotificationItem[];
-  toasts: ToastItem[];
+  toasts: ToastItem[]; // Active visible toasts (MAX 3)
+  pendingToastCount: number; // Queued toast count waiting for slot
   unreadCount: number;
   preferences: NotificationPreferences;
   addNotification: (item: Omit<NotificationItem, 'id' | 'timestamp' | 'read'>) => void;
@@ -23,6 +24,7 @@ interface NotificationContextType {
 
 const STORAGE_KEY_NOTIFS = 'biotelemetry_notifications_v1';
 const STORAGE_KEY_PREFS = 'biotelemetry_notif_prefs_v1';
+const MAX_VISIBLE_TOASTS = 3;
 
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   enabled: true,
@@ -30,7 +32,7 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   volume: 0.5,
   critical: true,
   warning: true,
-  info: true
+  info: true,
 };
 
 const INITIAL_MOCK_NOTIFICATIONS: NotificationItem[] = [
@@ -43,7 +45,7 @@ const INITIAL_MOCK_NOTIFICATIONS: NotificationItem[] = [
     read: false,
     category: 'radiation',
     actionLabel: 'View Dosimeter',
-    actionRoute: '#analytics'
+    actionRoute: '#analytics',
   },
   {
     id: 'mock-2',
@@ -54,7 +56,7 @@ const INITIAL_MOCK_NOTIFICATIONS: NotificationItem[] = [
     read: false,
     category: 'system',
     actionLabel: 'View Details',
-    actionRoute: '#telemetry'
+    actionRoute: '#telemetry',
   },
   {
     id: 'mock-3',
@@ -65,8 +67,8 @@ const INITIAL_MOCK_NOTIFICATIONS: NotificationItem[] = [
     read: true,
     category: 'activity',
     actionLabel: 'Open Check-In',
-    actionRoute: '#checkin'
-  }
+    actionRoute: '#checkin',
+  },
 ];
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -91,7 +93,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return DEFAULT_PREFERENCES;
   });
 
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  // State for visible toasts (strictly capped at MAX_VISIBLE_TOASTS = 3)
+  const [visibleToasts, setVisibleToasts] = useState<ToastItem[]>([]);
+  
+  // Pending queue of ToastItems waiting to be promoted when a slot opens
+  const pendingQueueRef = useRef<ToastItem[]>([]);
+  const [pendingCount, setPendingCount] = useState<number>(0);
+
+  // Auto-dismiss timers indexed by toastId
+  const toastTimersRef = useRef<Map<string, number>>(new Map());
 
   // Keep soundService synced with preferences
   useEffect(() => {
@@ -102,7 +112,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch {}
   }, [preferences]);
 
-  // Persist notifications
+  // Persist notification records
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_NOTIFS, JSON.stringify(notifications));
@@ -127,9 +137,41 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [preferences]);
 
-  const dismissToast = useCallback((toastId: string) => {
-    setToasts(prev => prev.filter(t => t.toastId !== toastId));
+  // Schedule auto-dismiss for a visible toast
+  const scheduleAutoDismiss = useCallback((toast: ToastItem, dismissFn: (id: string) => void) => {
+    if (toast.severity === 'CRITICAL') return; // Critical toasts require user acknowledgment or dismiss
+    const duration = toast.severity === 'WARNING' ? 7000 : 4500;
+    const timerId = window.setTimeout(() => {
+      dismissFn(toast.toastId);
+    }, duration);
+    toastTimersRef.current.set(toast.toastId, timerId);
   }, []);
+
+  // Dismiss a visible toast and immediately promote next pending toast if available
+  const dismissToast = useCallback((toastId: string) => {
+    // Clear any pending timer
+    if (toastTimersRef.current.has(toastId)) {
+      clearTimeout(toastTimersRef.current.get(toastId));
+      toastTimersRef.current.delete(toastId);
+    }
+
+    setVisibleToasts(currentVisible => {
+      const filtered = currentVisible.filter(t => t.toastId !== toastId);
+      
+      // If we now have room and items are waiting in the pending queue, promote one
+      if (filtered.length < MAX_VISIBLE_TOASTS && pendingQueueRef.current.length > 0) {
+        const nextToast = pendingQueueRef.current.shift()!;
+        setPendingCount(pendingQueueRef.current.length);
+        
+        // Schedule auto-dismiss for newly promoted toast (without replaying sound)
+        scheduleAutoDismiss(nextToast, dismissToast);
+        
+        return [...filtered, nextToast];
+      }
+      
+      return filtered;
+    });
+  }, [scheduleAutoDismiss]);
 
   const addNotification = useCallback((item: Omit<NotificationItem, 'id' | 'timestamp' | 'read'>) => {
     const id = `notif-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -137,27 +179,35 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ...item,
       id,
       timestamp: new Date().toISOString(),
-      read: false
+      read: false,
     };
 
+    // Store in all notifications history
     setNotifications(prev => [newNotif, ...prev.slice(0, 49)]); // keep latest 50
 
-    // Trigger toast
-    const toastId = `toast-${Date.now()}`;
-    const newToast: ToastItem = { ...newNotif, toastId };
-    setToasts(prev => [newToast, ...prev].slice(0, 5));
-
-    // Audio cue
+    // Only play audio on entry if sound is allowed
     playSeveritySound(newNotif.severity);
 
-    // Auto-dismiss for non-critical toasts
-    if (newNotif.severity !== 'CRITICAL') {
-      const timeoutMs = newNotif.severity === 'WARNING' ? 8000 : 5000;
-      setTimeout(() => {
-        dismissToast(toastId);
-      }, timeoutMs);
-    }
-  }, [playSeveritySound, dismissToast]);
+    // Create toast item
+    const toastId = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const newToast: ToastItem = { ...newNotif, toastId };
+
+    setVisibleToasts(currentVisible => {
+      if (currentVisible.length < MAX_VISIBLE_TOASTS) {
+        // We have an available slot: display immediately
+        scheduleAutoDismiss(newToast, dismissToast);
+        return [...currentVisible, newToast];
+      } else {
+        // Visible slots full (>= 3): put into pending queue
+        // Avoid duplicate IDs in queue
+        if (!pendingQueueRef.current.some(t => t.id === newToast.id)) {
+          pendingQueueRef.current.push(newToast);
+          setPendingCount(pendingQueueRef.current.length);
+        }
+        return currentVisible;
+      }
+    });
+  }, [playSeveritySound, scheduleAutoDismiss, dismissToast]);
 
   const markAsRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -189,7 +239,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     <NotificationContext.Provider
       value={{
         notifications,
-        toasts,
+        toasts: visibleToasts,
+        pendingToastCount: pendingCount,
         unreadCount,
         preferences,
         addNotification,
@@ -199,7 +250,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         clearAllNotifications,
         clearReadNotifications,
         dismissToast,
-        updatePreferences
+        updatePreferences,
       }}
     >
       {children}
@@ -210,6 +261,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 const FALLBACK_CONTEXT: NotificationContextType = {
   notifications: INITIAL_MOCK_NOTIFICATIONS,
   toasts: [],
+  pendingToastCount: 0,
   unreadCount: 2,
   preferences: DEFAULT_PREFERENCES,
   addNotification: () => {},
@@ -219,7 +271,7 @@ const FALLBACK_CONTEXT: NotificationContextType = {
   clearAllNotifications: () => {},
   clearReadNotifications: () => {},
   dismissToast: () => {},
-  updatePreferences: () => {}
+  updatePreferences: () => {},
 };
 
 export const useNotificationCenter = () => {
