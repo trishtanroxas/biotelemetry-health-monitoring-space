@@ -391,50 +391,7 @@ export function AIPage({
         description="Grounded clinical decision support evaluating telemetry baselines and daily wellness entries."
       />
 
-      <div className="assistant-layout">
-        {/* Context Summary Sidebar */}
-        <aside className="assistant-sidebar stack">
-          <section className="panel">
-            <div className="section-heading">
-              <h2>Astronaut Profile</h2>
-              <span className="pill">{context.astronautId}</span>
-            </div>
-            <dl className="detail-list mt-3">
-              <div>
-                <dt>Crew ID</dt>
-                <dd><strong>{context.astronautId}</strong></dd>
-              </div>
-              <div>
-                <dt>Mission Day</dt>
-                <dd>Day {context.vitals?.mission_day ?? 14}</dd>
-              </div>
-              <div>
-                <dt>Mission Zone</dt>
-                <dd className="font-mono text-cyan-300">{context.vitals?.mission_zone ?? 'LEO_ISS'}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="panel">
-            <div className="section-heading">
-              <h2>Historical Context</h2>
-              <span className="pill">{context.records.length} check-ins</span>
-            </div>
-            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-              Assistant analyzes your recent {context.records.length} saved check-ins, sleep patterns, fatigue ratings, and active anomalies.
-            </p>
-            {messages.length > 0 && (
-              <button
-                onClick={handleClearChat}
-                className="button secondary text-xs w-full mt-4 flex items-center justify-center gap-1.5"
-              >
-                <Trash2 size={13} />
-                <span>Clear Conversation</span>
-              </button>
-            )}
-          </section>
-        </aside>
-
+      <div className="assistant-layout assistant-focused">
         {/* Main Chat Panel */}
         <section className="panel chat-panel">
           <div className="chat-header">
@@ -451,6 +408,17 @@ export function AIPage({
                   : 'Demo mode · simulated answers · connect API for Groq Cloud'}
               </p>
             </div>
+            {messages.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearChat}
+                className="button secondary compact-btn flex items-center gap-1 text-xs"
+                title="Clear conversation"
+              >
+                <Trash2 size={13} />
+                <span>Clear</span>
+              </button>
+            )}
             <span className={`status-dot ${offline ? 'offline-dot' : ''}`} />
           </div>
 
