@@ -2,7 +2,7 @@ import type { AssistantReply, CheckIn, MissionCompletion } from '../types/wellne
 import type { AlertItem, VitalSigns } from '../types/telemetry';
 import type { SpaceEnvironment } from '../types/spaceWellness';
 import { askFlightAssistantApi } from './api';
-import { localDate, missionCatalog } from './missions';
+import { localDate, missionCatalog, normalizeMissionId } from './missions';
 import { durationLabel, sourceLabels } from './environment';
 
 type AssistantRecord = Pick<CheckIn, 'id' | 'astronautId' | 'createdAt' | 'sleepHours' | 'sleepQuality' | 'fatigue' | 'stress' | 'mood' | 'exerciseMinutes'> & {
@@ -74,7 +74,15 @@ export const demoAssistant: AssistantService = {
     const latest = records[0];
     const alert = context.alerts.filter(item => item.astronaut_id === context.astronautId).sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0];
     const activityIds = new Set(missionCatalog.map(item => item.id));
-    const completed = new Set(context.completions.filter(item => item.astronautId === context.astronautId && item.date === localDate() && activityIds.has(item.missionId)).map(item => item.missionId)).size;
+    const completed = new Set(
+      context.completions
+        .filter(item => {
+          if (item.astronautId !== context.astronautId || item.date !== localDate()) return false;
+          const normalized = normalizeMissionId(item.missionId);
+          return activityIds.has(item.missionId) || activityIds.has(normalized);
+        })
+        .map(item => normalizeMissionId(item.missionId)),
+    ).size;
     const sleep = /sleep/i.test(question);
     const observation = /flag|observation|notification/i.test(question);
     const activity = /activit|mission|wellness/i.test(question);
@@ -101,7 +109,7 @@ export const demoAssistant: AssistantService = {
       facts = value ? `On ${new Date(mentalRecord!.createdAt).toLocaleString()}, your self-reports were: isolation ${value.isolation === undefined ? 'not recorded' : `${value.isolation}/5 (1 not at all, 5 very much)`}; connection ${value.socialConnection === undefined ? 'not recorded' : `${value.socialConnection}/5 (1 not connected, 5 very connected)`}; emotional well-being ${value.emotionalWellbeing === undefined ? 'not recorded' : `${value.emotionalWellbeing}/5 (1 very low, 5 very good)`}.` : 'No optional connection or emotional well-being ratings are recorded for this astronaut.';
     } else if (timing) facts = sleepRecord ? `Recorded UTC sleep window: ${sleepRecord.spaceWellness!.sleep!.startUtc} to ${sleepRecord.spaceWellness!.sleep!.wakeUtc}, ${sleepRecord.spaceWellness!.sleep!.windowMinutes} elapsed minutes. This is not a measurement of time asleep.` : 'No optional UTC sleep times are recorded for this astronaut.';
     else facts = observation ? (alert ? `The recorded ${alert.severity.toLowerCase()} notification says: “${alert.message}” (${new Date(alert.timestamp).toLocaleString()}).` : 'No saved notifications are available for the selected astronaut.')
-      : activity ? `You have completed ${completed} of ${missionCatalog.length} activities saved on this device today.`
+      : activity ? `You have completed ${completed} of ${Math.min(9, missionCatalog.length)} activities saved on this device today.`
       : latest ? `You have ${records.length} locally saved check-in(s). On ${new Date(latest.createdAt).toLocaleString()}, you recorded ${latest.sleepHours} hours of sleep, sleep quality ${latest.sleepQuality}/5${sleep ? '.' : `, mood ${latest.mood.toLowerCase()}, tiredness ${latest.fatigue}/5 and stress ${latest.stress}/5.`}`
       : 'There are no saved health check-ins for this astronaut yet.';
     return { facts, explanation: environmental ? 'Source labels describe provenance, not safety. An environmental sensor cannot establish personal radiation dose, and this demo does not calculate muscle or bone loss.' : pain || mental ? 'These are optional self-reports, not a diagnosis or a clinical assessment.' : timing || sleep ? 'Sleep entries are self-reported. Timing alone cannot diagnose circadian disruption.' : observation ? 'This demo can quote a saved notification but cannot tell you its medical cause. Measurements are simulated.' : 'This demo explains only what you recorded. It cannot diagnose a condition or tell us why something changed.', action: observation ? 'Review the original notification with your mission medical team using approved procedures.' : 'Review My Health Trends or record an entry in Check-In. Follow your mission-approved procedures.' };

@@ -1,10 +1,15 @@
-﻿import { defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [react(), VitePWA({
     registerType: 'autoUpdate',
-    includeAssets: ['branding/biotelemetry-logo.png', 'branding/pwa-192.png', 'branding/pwa-512.png'],
+    includeAssets: [
+      'branding/biotelemetry-logo.png',
+      'branding/human-anatomy.jpg',
+      'branding/pwa-192.png',
+      'branding/pwa-512.png',
+    ],
     manifest: {
       name: 'BioTelemetry', short_name: 'BioTelemetry',
       description: 'Monitoring Human Health Beyond Earth',
@@ -16,7 +21,7 @@ export default defineConfig({
       ],
     },
     workbox: {
-      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
+      globPatterns: ['**/*.{js,css,html,png,jpg,svg,ico,woff2}'],
       globIgnores: ['**/*placeholder*'],
       navigateFallback: '/index.html',
       navigateFallbackDenylist: [/^\/api(?:\/|$)/],

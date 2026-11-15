@@ -1,59 +1,174 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fetchSpaceWeather, type SpaceWeatherSnapshot } from '../services/api';
+import type { IssLiveFeed, SpaceWeatherEvent, SpaceWeatherSnapshot } from '../types/spaceWeather';
+import {
+  buildPropagatedIssFeed,
+  fetchLiveIssFeed,
+  loadSpaceWeatherCache,
+  mergeRealtimeSpaceWeatherEvent,
+  saveSpaceWeatherCache,
+  toSpaceWeatherDatum,
+} from '../services/spaceWeather';
+import { fetchSpaceWeatherSnapshot, getRealtimeSupabaseClient } from '../services/spaceWeatherRealtime';
 
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5-minute TTL matching backend cache
+export function useSpaceWeather(offline: boolean) {
+  const [snapshot, setSnapshot] = useState<SpaceWeatherSnapshot | null>(() => loadSpaceWeatherCache());
+  const [issFeed, setIssFeed] = useState<IssLiveFeed>(() => buildPropagatedIssFeed());
+  const [issLoading, setIssLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+  const [error, setError] = useState('');
+  const offlineRef = useRef(offline);
+  const issTrackRef = useRef(issFeed.recent_track);
+  useEffect(() => { offlineRef.current = offline; }, [offline]);
+  useEffect(() => { issTrackRef.current = issFeed.recent_track; }, [issFeed]);
 
-interface SpaceWeatherState {
-  data: SpaceWeatherSnapshot | null;
-  loading: boolean;
-  error: string;
-  lastFetched: number | null;
-}
-
-export function useSpaceWeather(enabled = true) {
-  const [state, setState] = useState<SpaceWeatherState>({
-    data: null,
-    loading: false,
-    error: '',
-    lastFetched: null,
-  });
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
-
-  const load = useCallback(async (force = false) => {
-    if (!enabled) return;
-    if (!force && state.lastFetched && Date.now() - state.lastFetched < CACHE_TTL_MS) return;
-    setState(prev => ({ ...prev, loading: true, error: '' }));
-    try {
-      const data = await fetchSpaceWeather(force);
-      if (!mountedRef.current) return;
-      setState({ data, loading: false, error: '', lastFetched: Date.now() });
-    } catch (err) {
-      if (!mountedRef.current) return;
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: err instanceof Error ? err.message : 'Space weather unavailable.',
-      }));
+  const refreshIss = useCallback(async (force = false) => {
+    if (offlineRef.current) {
+      setIssFeed(prev => buildPropagatedIssFeed(new Date(), prev.recent_track));
+      return;
     }
-  }, [enabled, state.lastFetched]);
+    if (force) setIssLoading(true);
+    try {
+      const next = await fetchLiveIssFeed(force, '/api/v1', issTrackRef.current);
+      setIssFeed(next);
+    } finally {
+      if (force) setIssLoading(false);
+    }
+  }, []);
+
+  const refresh = useCallback(async (force = false) => {
+    if (offlineRef.current) return;
+    setLoading(true);
+    setError('');
+    try {
+      const next = await fetchSpaceWeatherSnapshot(force);
+      if (offlineRef.current) return;
+      setSnapshot(next);
+      saveSpaceWeatherCache(next);
+    } catch {
+      if (!offlineRef.current) {
+        setError('Unable to reach DONKI space-weather feed. Showing latest cached snapshot if available.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
-    if (enabled) {
-      void load();
-      timerRef.current = setTimeout(() => void load(true), CACHE_TTL_MS);
+    const issTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void refreshIss(false);
+      }
+    }, 5000);
+    if (!offline) {
+      void refreshIss(false);
     }
     return () => {
-      mountedRef.current = false;
-      if (timerRef.current) clearTimeout(timerRef.current);
+      window.clearInterval(issTimer);
     };
-  }, [enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [offline, refreshIss]);
+
+  useEffect(() => {
+    if (offline) {
+      setRealtimeConnected(false);
+      return;
+    }
+
+    let alive = true;
+    void refresh(false);
+
+    const supabase = getRealtimeSupabaseClient();
+    const channel = supabase
+      ? supabase
+          .channel('donki-realtime')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'space_weather_events' },
+            payload => {
+              if (!alive || offlineRef.current || !payload.new) return;
+              const event = payload.new as SpaceWeatherEvent;
+              setSnapshot(prev => {
+                const base = prev ?? {
+                  kp_current: 0,
+                  storm_level: 'G0_QUIET',
+                  radiation_storm: 'S0_NONE',
+                  active_sep: false,
+                  summary: event.summary,
+                  source_mode: 'live_nasa',
+                  fetched_at: new Date().toISOString(),
+                  events: [],
+                };
+                const updated = mergeRealtimeSpaceWeatherEvent(base, event);
+                if (updated) saveSpaceWeatherCache(updated);
+                return updated;
+              });
+            },
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'space_weather_status' },
+            payload => {
+              if (!alive || offlineRef.current || !payload.new) return;
+              const row = payload.new as Partial<SpaceWeatherSnapshot>;
+              setSnapshot(prev => {
+                const base: SpaceWeatherSnapshot = prev ?? {
+                  kp_current: 0,
+                  storm_level: 'G0_QUIET',
+                  radiation_storm: 'S0_NONE',
+                  active_sep: false,
+                  summary: row.summary ?? 'Live NASA DONKI update',
+                  source_mode: 'live_nasa',
+                  fetched_at: row.fetched_at ?? new Date().toISOString(),
+                  events: [],
+                };
+                const updated: SpaceWeatherSnapshot = {
+                  ...base,
+                  kp_current: typeof row.kp_current === 'number' ? row.kp_current : base.kp_current,
+                  storm_level: row.storm_level ?? base.storm_level,
+                  radiation_storm: row.radiation_storm ?? base.radiation_storm,
+                  latest_flare_class: row.latest_flare_class ?? base.latest_flare_class,
+                  latest_flare_location: row.latest_flare_location ?? base.latest_flare_location,
+                  latest_flare_time: row.latest_flare_time ?? base.latest_flare_time,
+                  active_sep: typeof row.active_sep === 'boolean' ? row.active_sep : base.active_sep,
+                  earth_impact_eta: row.earth_impact_eta ?? base.earth_impact_eta,
+                  summary: row.summary ?? base.summary,
+                  source_mode: 'live_nasa',
+                  fetched_at: row.fetched_at ?? new Date().toISOString(),
+                };
+                saveSpaceWeatherCache(updated);
+                return updated;
+              });
+            },
+          )
+          .subscribe(status => {
+            if (alive) setRealtimeConnected(status === 'SUBSCRIBED');
+          })
+      : null;
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible' && !offlineRef.current) {
+        void refresh(false);
+      }
+    }, 120000);
+
+    return () => {
+      alive = false;
+      window.clearInterval(interval);
+      if (channel && supabase) {
+        void supabase.removeChannel(channel);
+      }
+    };
+  }, [offline, refresh]);
 
   return {
-    weather: state.data,
-    weatherLoading: state.loading,
-    weatherError: state.error,
-    refreshWeather: () => void load(true),
+    snapshot,
+    datum: toSpaceWeatherDatum(snapshot, offline),
+    issFeed,
+    issLoading,
+    refreshIss: () => refreshIss(true),
+    loading,
+    realtimeConnected,
+    error,
+    refresh: () => refresh(true),
   };
 }

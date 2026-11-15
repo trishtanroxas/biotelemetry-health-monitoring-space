@@ -21,6 +21,29 @@ import { Disclosure } from '../components/WellnessUI';
 import { AIResponseRenderer } from '../components/AIResponseRenderer';
 import { useLiveSpeechRecognition } from '../hooks/useLiveSpeech';
 
+export function charCountForStreamRatio(cumulativeWeights: number[], ratio: number): number {
+  const totalChars = cumulativeWeights.length;
+  if (totalChars === 0) return 0;
+  if (!Number.isFinite(ratio) || ratio <= 0) return 0;
+  if (ratio >= 1) return totalChars;
+
+  const totalWeight = cumulativeWeights[totalChars - 1];
+  const targetWeight = totalWeight * ratio;
+  let lo = 0;
+  let hi = totalChars - 1;
+  let count = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (cumulativeWeights[mid] <= targetWeight) {
+      count = mid + 1;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return count;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';

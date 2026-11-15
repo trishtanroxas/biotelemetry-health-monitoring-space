@@ -47,3 +47,6 @@ wheels/
 .DS_Store
 Thumbs.db
 
+# Agents & Local Tooling
+.agents/
+

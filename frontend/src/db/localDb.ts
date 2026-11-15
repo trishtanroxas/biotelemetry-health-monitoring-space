@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { VitalSigns, AlertItem } from '../types/telemetry';
+import { VitalSigns, AlertItem, type ImageAssessmentRecord } from '../types/telemetry';
 import type { CheckIn, MissionCompletion } from '../types/wellness';
 
 export interface OfflineVitalRecord extends VitalSigns {
@@ -12,6 +12,7 @@ export class SpaceTelemetryDB extends Dexie {
   alertsStore!: Table<AlertItem, string>;
   checkins!: Table<CheckIn, string>;
   missionCompletions!: Table<MissionCompletion, string>;
+  imagingAssessments!: Table<ImageAssessmentRecord, string>;
 
   constructor() {
     super('SpaceBiotelemetryDB');
@@ -22,6 +23,9 @@ export class SpaceTelemetryDB extends Dexie {
     this.version(2).stores({
       checkins: 'id, astronautId, createdAt, syncStatus',
       missionCompletions: 'key, astronautId, date',
+    });
+    this.version(3).stores({
+      imagingAssessments: 'id, astronautId, examType, recordedAt',
     });
   }
 }

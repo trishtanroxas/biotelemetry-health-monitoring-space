@@ -131,15 +131,25 @@ alter table public.alerts enable row level security;
 alter table public.space_weather_events enable row level security;
 alter table public.space_weather_status enable row level security;
 
+drop policy if exists "Public read astronauts" on public.astronauts;
 create policy "Public read astronauts" on public.astronauts for select using (true);
+drop policy if exists "Public write astronauts" on public.astronauts;
 create policy "Public write astronauts" on public.astronauts for all using (true) with check (true);
+drop policy if exists "Public read telemetry" on public.telemetry_logs;
 create policy "Public read telemetry" on public.telemetry_logs for select using (true);
+drop policy if exists "Public insert telemetry" on public.telemetry_logs;
 create policy "Public insert telemetry" on public.telemetry_logs for insert with check (true);
+drop policy if exists "Public read alerts" on public.alerts;
 create policy "Public read alerts" on public.alerts for select using (true);
+drop policy if exists "Public write alerts" on public.alerts;
 create policy "Public write alerts" on public.alerts for all using (true) with check (true);
+drop policy if exists "Public read space_weather_events" on public.space_weather_events;
 create policy "Public read space_weather_events" on public.space_weather_events for select using (true);
+drop policy if exists "Public write space_weather_events" on public.space_weather_events;
 create policy "Public write space_weather_events" on public.space_weather_events for all using (true) with check (true);
+drop policy if exists "Public read space_weather_status" on public.space_weather_status;
 create policy "Public read space_weather_status" on public.space_weather_status for select using (true);
+drop policy if exists "Public write space_weather_status" on public.space_weather_status;
 create policy "Public write space_weather_status" on public.space_weather_status for all using (true) with check (true);
 
 do $$
@@ -205,7 +215,20 @@ create index if not exists idx_imaging_assessments_astronaut_time
 alter table public.crew_checkins enable row level security;
 alter table public.imaging_assessments enable row level security;
 
+drop policy if exists "Public read crew_checkins" on public.crew_checkins;
 create policy "Public read crew_checkins" on public.crew_checkins for select using (true);
+drop policy if exists "Public write crew_checkins" on public.crew_checkins;
 create policy "Public write crew_checkins" on public.crew_checkins for all using (true) with check (true);
+drop policy if exists "Public read imaging_assessments" on public.imaging_assessments;
 create policy "Public read imaging_assessments" on public.imaging_assessments for select using (true);
+drop policy if exists "Public write imaging_assessments" on public.imaging_assessments;
 create policy "Public write imaging_assessments" on public.imaging_assessments for all using (true) with check (true);
+
+-- Ensure anon, authenticated, and service_role have full access via Supabase REST API
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all routines in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on routines to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;

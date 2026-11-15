@@ -1,4 +1,4 @@
-import type { VitalSigns } from './telemetry';
+import type { SelfExamType, VitalSigns } from './telemetry';
 import type { SpaceWellnessV1 } from './spaceWellness';
 
 export interface MetabolicCheckIn {
@@ -21,17 +21,31 @@ export interface CheckIn {
   symptoms: string;
   notes: string;
   biometrics: VitalSigns | null;
-  syncStatus: 'pending';
+  syncStatus: 'pending' | 'synced';
   spaceWellness?: SpaceWellnessV1;
   metabolic?: MetabolicCheckIn;
 }
+
+export type MissionCategory =
+  | 'Physical countermeasures'
+  | 'Medical & exams'
+  | 'Metabolic & hydration'
+  | 'Sleep & behavioral';
+
+export type VerificationMode = 'auto-checkin' | 'auto-exam' | 'auto-or-manual' | 'manual';
+
 export interface Mission {
   id: string;
-  category: 'Physical wellness' | 'Sleep & recovery' | 'Mental & emotional';
+  category: MissionCategory;
   title: string;
   description: string;
   kind: 'Routine' | 'Recommended';
+  verificationMode: VerificationMode;
+  estimatedMinutes: number;
+  targetPage?: Page;
+  targetExam?: SelfExamType;
 }
+
 export interface MissionCompletion {
   key: string;
   astronautId: string;
@@ -39,8 +53,17 @@ export interface MissionCompletion {
   date: string;
   completedAt: string;
 }
+
 export type Page = 'dashboard' | 'checkin' | 'analytics' | 'missions' | 'ai';
 export type TimeRange = 'day' | 'week' | 'month';
+
+export interface AssistantAction {
+  label: string;
+  targetPage: Page;
+  targetExam?: SelfExamType;
+  protocolId?: string;
+}
+
 export interface AssistantReply {
   facts: string;
   explanation: string;
@@ -48,4 +71,6 @@ export interface AssistantReply {
   sourceLabel?: string;
   nasaReference?: string;
   escalate?: string;
+  suggestedActions?: AssistantAction[];
+  sbarText?: string;
 }
