@@ -2859,3 +2859,71 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
 .ops-simulation-section {
   margin-top: 18px;
 }
+
+
+/* Back to Home Buttons in Dashboard */
+.nav-back-to-home {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 44px;
+  padding: 10px 14px;
+  color: #00d9ff !important;
+  background: rgba(0, 217, 255, 0.08);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.nav-back-to-home:hover {
+  background: rgba(0, 217, 255, 0.18);
+  border-color: #00d9ff;
+  transform: translateX(-2px);
+}
+
+.topbar-left-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.topbar-back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(0, 217, 255, 0.35);
+  color: #00d9ff;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.topbar-back-home:hover {
+  background: rgba(0, 217, 255, 0.15);
+  border-color: #00d9ff;
+  transform: translateX(-2px);
+}
+
+.btn-back-home {
+  background: rgba(0, 217, 255, 0.1) !important;
+  border-color: rgba(0, 217, 255, 0.4) !important;
+  color: #00d9ff !important;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-back-home:hover {
+  background: rgba(0, 217, 255, 0.2) !important;
+  border-color: #00d9ff !important;
+  transform: translateX(-2px);
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}

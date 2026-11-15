@@ -82,6 +82,10 @@ export const DashboardHomeView: React.FC<DashboardHomeViewProps> = ({
           </div>
 
           <div className="header-meta-chips">
+            <a href="#landing" className="meta-chip btn-back-home" title="Return to Landing Page">
+              <ArrowRight size={14} className="rotate-180 text-cyan" />
+              <span>Back to Home</span>
+            </a>
             <div className="meta-chip">
               <CalendarDays size={15} className="text-cyan" />
               <span>{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
