@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   ArrowRight, 
   ExternalLink,
@@ -9,7 +9,6 @@ import {
   Code2,
   Compass,
   CheckCircle2,
-  Clock,
   Sparkles,
   ShieldAlert,
   Cpu,
@@ -21,39 +20,6 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
-  const [selectedScenario, setSelectedScenario] = useState<'ISS' | 'MOON' | 'MARS'>('MARS');
-
-  const scenarioDetails = {
-    ISS: {
-      distance: '408 km',
-      latency: '50 ms (Real-time Link)',
-      mode: 'GROUND ASSISTED',
-      status: 'Live Earth Telemedicine Active',
-      color: 'text-emerald-400',
-      badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400',
-      description: 'Continuous low-orbit communication with Houston Mission Control flight surgeons.'
-    },
-    MOON: {
-      distance: '384,400 km',
-      latency: '1.3 sec round-trip delay',
-      mode: 'HYBRID CO-PILOT',
-      status: 'Lunar Gateway Telemetry Link',
-      color: 'text-cyan-400',
-      badge: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-400',
-      description: 'Noticeable round-trip delay. Onboard edge AI pre-screens vitals before Earth uplink.'
-    },
-    MARS: {
-      distance: '225,000,000 km',
-      latency: '14 to 22 min one-way',
-      mode: 'AUTONOMOUS EDGE ACTIVE',
-      status: 'Loss of Signal Resilient (IndexedDB)',
-      color: 'text-purple-400',
-      badge: 'border-purple-500/40 bg-purple-500/10 text-purple-400',
-      description: 'Earth is too far. BioTelemetry performs autonomous clinical triage directly onboard.'
-    }
-  };
-
-  const curr = scenarioDetails[selectedScenario];
 
   return (
     <div className="landing-master">
@@ -155,24 +121,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             </a>
           </div>
         </div>
-
-        {/* Visual Aerospace Concept Hero Banner */}
-        <div className="hero-aerospace-visual animate-slide-up-delayed">
-          <div className="aerospace-orbital-graphic">
-            <div className="orbital-orbit-ring ring-1" />
-            <div className="orbital-orbit-ring ring-2" />
-            <div className="orbital-planet-core">
-              <span className="core-spec-text">DEEP SPACE HABITAT</span>
-            </div>
-            <div className="orbital-station-marker">
-              <span className="station-dot" />
-              <span className="station-label">CREW EDGE NODE</span>
-            </div>
-          </div>
-          <div className="aerospace-caption">
-            <span>OFFLINE-FIRST RESILIENCE • AUTONOMOUS TRIAGE • INTERPLANETARY SIGNAL RESISTANCE</span>
-          </div>
-        </div>
       </section>
 
       {/* SECTION 2: The Problem (Editorial Layout) */}
@@ -254,59 +202,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             physiological conditions, evaluate potential risks, and access actionable guidance without depending 
             on continuous communication with Earth.
           </p>
-        </div>
-
-        {/* Interactive Mission Link Simulator */}
-        <div className="comms-simulator-hud">
-          <div className="sim-header">
-            <span className="sim-label">INTERACTIVE COMMUNICATION LINK SIMULATOR</span>
-            <div className="sim-toggles">
-              {(['ISS', 'MOON', 'MARS'] as const).map(dest => (
-                <button
-                  key={dest}
-                  onClick={() => setSelectedScenario(dest)}
-                  className={`sim-toggle-btn ${selectedScenario === dest ? 'active' : ''}`}
-                >
-                  {dest}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="sim-dashboard-body">
-            <div className="sim-node earth-node">
-              <div className="node-icon">🌍</div>
-              <div className="node-info">
-                <h4>Earth Mission Control</h4>
-                <p>Houston Flight Surgeon Gateway</p>
-              </div>
-            </div>
-
-            <div className="sim-beam">
-              <div className="beam-line" />
-              <div className="beam-pulse" />
-              <div className="beam-label">
-                <Clock className="h-3.5 w-3.5 text-cyan-400" />
-                <span>{curr.latency}</span>
-              </div>
-            </div>
-
-            <div className="sim-node spacecraft-node">
-              <div className="node-icon">🚀</div>
-              <div className="node-info">
-                <h4>Crew Spacecraft Hub</h4>
-                <span className={`node-mode-badge ${curr.badge}`}>{curr.mode}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="sim-footer">
-            <div className="sim-status-text">
-              <span className={`sim-state-dot ${selectedScenario === 'MARS' ? 'dot-purple' : 'dot-cyan'}`} />
-              <span>{curr.status}</span>
-            </div>
-            <p className="sim-desc">{curr.description}</p>
-          </div>
         </div>
 
         {/* Comparison: Earth vs Edge */}
