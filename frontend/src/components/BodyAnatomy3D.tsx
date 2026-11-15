@@ -956,18 +956,10 @@ export default function BodyAnatomy3D({
       }
 
       const raycaster = new THREE.Raycaster();
-      const focusPlane = new THREE.Plane();
-      const focusPlaneNormal = new THREE.Vector3();
-      const focusPlaneHit = new THREE.Vector3();
       const focusNdc = new THREE.Vector2();
 
       let viewportW = initWidth;
       let viewportH = initHeight;
-      let focusGoalY = -0.02;
-      let viewPanX = 0;
-      let viewPanY = 0;
-      let viewPanGoalX = 0;
-      let viewPanGoalY = 0;
       let spaceHeld = false;
       let canvasHovered = false;
       let isCanvasPanning = false;
@@ -975,6 +967,9 @@ export default function BodyAnatomy3D({
       const panLast = { x: 0, y: 0 };
       const touchCoords = new Map<number, { x: number; y: number }>();
       let prevTwoFingerMid: { x: number; y: number } | null = null;
+      const panRight = new THREE.Vector3();
+      const panUp = new THREE.Vector3();
+      const panOffset = new THREE.Vector3();
 
       const recenterView = () => {
         glideRef.current = {
@@ -989,26 +984,25 @@ export default function BodyAnatomy3D({
 
       const syncViewOffset = () => {
         camera.aspect = viewportW / viewportH;
-        if (Math.abs(viewPanX) < 0.05 && Math.abs(viewPanY) < 0.05) {
-          if (camera.view?.enabled) camera.clearViewOffset();
-          camera.updateProjectionMatrix();
-          return;
-        }
-        camera.setViewOffset(viewportW, viewportH, -viewPanX, -viewPanY, viewportW, viewportH);
+        if (camera.view?.enabled) camera.clearViewOffset();
+        // Screen-space pan preserves symmetric camera frustum without setViewOffset distortion
+        camera.updateProjectionMatrix();
       };
 
       const applyCanvasPan = (dx: number, dy: number) => {
-        if (!controls) return;
+        if (!controls || !camera) return;
         const dist = camera.position.distanceTo(controls.target);
         const worldUnitsPerPx = (2 * dist * Math.tan((camera.fov * Math.PI) / 360)) / Math.max(viewportH, 1);
-        const rawNextY = focusGoalY + dy * worldUnitsPerPx;
-        const clampedNextY = Math.max(-0.84, Math.min(0.82, rawNextY));
-        const leftoverPx = (rawNextY - clampedNextY) / Math.max(worldUnitsPerPx, 1e-5);
-        focusGoalY = clampedNextY;
-        const maxPanX = viewportW * 0.34;
-        const maxPanY = viewportH * 0.24;
-        viewPanGoalX = Math.max(-maxPanX, Math.min(maxPanX, viewPanGoalX + dx));
-        viewPanGoalY = Math.max(-maxPanY, Math.min(maxPanY, viewPanGoalY + leftoverPx));
+        panRight.setFromMatrixColumn(camera.matrixWorld, 0);
+        panUp.setFromMatrixColumn(camera.matrixWorld, 1);
+        panOffset.set(0, 0, 0)
+          .addScaledVector(panRight, -dx * worldUnitsPerPx)
+          .addScaledVector(panUp, dy * worldUnitsPerPx);
+        camera.position.add(panOffset);
+        controls.target.add(panOffset);
+        controls.target.x = Math.max(-0.6, Math.min(0.6, controls.target.x));
+        controls.target.y = Math.max(-0.65, Math.min(0.65, controls.target.y));
+        controls.target.z = Math.max(-0.6, Math.min(0.6, controls.target.z));
       };
 
       const cancelGlide = () => {
@@ -1133,7 +1127,7 @@ export default function BodyAnatomy3D({
       const handleWheel = (ev: WheelEvent) => {
         if (!renderer || !controls) return;
         glideRef.current.active = false;
-        // Horizontal trackpad swipe or Shift+wheel pans left/right; regular wheel zooms toward target height
+        // Horizontal trackpad swipe or Shift+wheel pans left/right; regular wheel zooms toward target
         if (Math.abs(ev.deltaX) > Math.abs(ev.deltaY) && Math.abs(ev.deltaX) > 0) {
           applyCanvasPan(-ev.deltaX * 0.65, 0);
           return;
@@ -1142,36 +1136,10 @@ export default function BodyAnatomy3D({
           applyCanvasPan(-ev.deltaY * 0.55, 0);
           return;
         }
-        if (ev.deltaY < 0) {
-          const rect = renderer.domElement.getBoundingClientRect();
-          if (rect.width <= 0 || rect.height <= 0) return;
-          focusNdc.set(
-            ((ev.clientX - rect.left) / rect.width) * 2 - 1,
-            -((ev.clientY - rect.top) / rect.height) * 2 + 1,
-          );
-          raycaster.setFromCamera(focusNdc, camera);
-          const organHits = raycaster.intersectObjects(pickables, false);
-          const hit = organHits[0] ?? raycaster.intersectObjects(anatomyGroup.children, true)[0];
-          let targetY = controls.target.y;
-          if (hit) {
-            targetY = hit.point.y;
-          } else {
-            camera.getWorldDirection(focusPlaneNormal);
-            focusPlane.setFromNormalAndCoplanarPoint(focusPlaneNormal, controls.target);
-            if (raycaster.ray.intersectPlane(focusPlane, focusPlaneHit)) {
-              targetY = focusPlaneHit.y;
-            }
-          }
-          // Lock zoom pivot along the central spinal axis (0, focusY, 0) and recenter view offset so model stays in middle
-          focusGoalY = Math.max(-0.84, Math.min(0.82, targetY));
-          viewPanGoalX *= 0.55;
-          viewPanGoalY *= 0.55;
-        } else if (ev.deltaY > 0) {
+        if (ev.deltaY > 0) {
           const dist = camera.position.distanceTo(controls.target);
-          if (dist > 1.75) {
-            focusGoalY += (-0.02 - focusGoalY) * 0.25;
-            viewPanGoalX *= 0.6;
-            viewPanGoalY *= 0.6;
+          if (dist > 2.6) {
+            controls.target.y += (-0.02 - controls.target.y) * 0.15;
           }
         }
       };
@@ -1293,9 +1261,6 @@ export default function BodyAnatomy3D({
 
         if (glideRef.current.active) {
           if (glideRef.current.needsReset) {
-            focusGoalY = glideRef.current.targetY;
-            viewPanGoalX = 0;
-            viewPanGoalY = 0;
             glideRef.current.needsReset = false;
           }
           offsetVec.copy(camera.position).sub(controls.target);
@@ -1308,45 +1273,23 @@ export default function BodyAnatomy3D({
           if (glideRef.current.distance !== undefined) {
             spherical.radius += (glideRef.current.distance - spherical.radius) * 0.12;
           }
-          controls.target.set(0, controls.target.y + (glideRef.current.targetY - controls.target.y) * 0.12, 0);
+          const nextTargetY = controls.target.y + (glideRef.current.targetY - controls.target.y) * 0.12;
+          controls.target.set(controls.target.x * 0.88, nextTargetY, controls.target.z * 0.88);
           offsetVec.setFromSpherical(spherical);
           camera.position.copy(controls.target).add(offsetVec);
-          viewPanX += (0 - viewPanX) * 0.16;
-          viewPanY += (0 - viewPanY) * 0.16;
-          syncViewOffset();
           if (
             Math.abs(dTheta) < 0.01 &&
             Math.abs(glideRef.current.polarRad - spherical.phi) < 0.01 &&
             Math.abs(glideRef.current.targetY - controls.target.y) < 0.01 &&
-            Math.abs(viewPanX) < 0.25 &&
-            Math.abs(viewPanY) < 0.25 &&
             (glideRef.current.distance === undefined || Math.abs(glideRef.current.distance - spherical.radius) < 0.02)
           ) {
-            viewPanX = 0;
-            viewPanY = 0;
-            syncViewOffset();
             glideRef.current.active = false;
-          }
-        } else {
-          const prevY = controls.target.y;
-          const nextY = prevY + (focusGoalY - prevY) * 0.22;
-          controls.target.set(0, nextY, 0);
-          camera.position.y += nextY - prevY;
-
-          const prevPanX = viewPanX;
-          const prevPanY = viewPanY;
-          viewPanX += (viewPanGoalX - viewPanX) * 0.24;
-          viewPanY += (viewPanGoalY - viewPanY) * 0.24;
-          if (
-            Math.abs(viewPanX - prevPanX) > 0.01 ||
-            Math.abs(viewPanY - prevPanY) > 0.01 ||
-            ((Math.abs(viewPanX) > 0.05 || Math.abs(viewPanY) > 0.05) && camera.view?.enabled)
-          ) {
-            syncViewOffset();
           }
         }
 
         controls.update();
+        camera.updateMatrixWorld();
+        anatomyGroup.updateMatrixWorld();
 
         if (!reducedMotion) {
           const beatsPerSec = Math.max(0.6, Math.min(3.2, (state.heartRate || 72) / 60));

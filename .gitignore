@@ -49,4 +49,7 @@ Thumbs.db
 
 # Agents & Local Tooling
 .agents/
+.superpowers/
+docs/superpowers/
+
 
