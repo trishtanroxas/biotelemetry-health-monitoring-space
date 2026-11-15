@@ -601,7 +601,10 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
 .landing-container {
   min-height: 100vh;
   width: 100%;
-  background: radial-gradient(circle at 50% 10%, #0c1b2e 0%, #030712 70%);
+  background: 
+    linear-gradient(180deg, rgba(3, 7, 18, 0.78) 0%, rgba(12, 27, 46, 0.65) 50%, rgba(3, 7, 18, 0.9) 100%),
+    radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.2) 0%, rgba(3, 7, 18, 0.85) 75%),
+    url('/space-bg.gif') center center / cover no-repeat;
   color: #f1f5f9;
   position: relative;
   overflow-x: hidden;
