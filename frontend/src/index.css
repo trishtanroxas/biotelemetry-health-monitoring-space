@@ -717,13 +717,53 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   box-shadow: 0 0 25px rgba(0, 217, 255, 0.6);
 }
 
-/* 2. Hero Section */
+/* 2. Hero Section - Minimal Initial Viewport */
 .hero-section {
   position: relative;
   z-index: 10;
   max-width: 1380px;
   margin: 0 auto;
-  padding: 40px 24px 80px;
+  min-height: calc(88vh - 80px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.hero-editorial {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-headline {
+  font-size: clamp(48px, 8.5vw, 102px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* User Explicit Request: Deep Space is pure electric cyan-blue */
+.blue-electric-text {
+  color: #00d9ff !important;
+  text-shadow: 0 0 35px rgba(0, 217, 255, 0.55), 0 0 10px rgba(0, 217, 255, 0.3);
+}
+
+/* 2B. Subsequent Introductory Scroll Section */
+.hero-intro-scroll-section {
+  position: relative;
+  z-index: 10;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 80px 24px 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -742,7 +782,7 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   color: #94a3b8;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -767,11 +807,6 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   background: rgba(51, 65, 85, 0.6);
 }
 
-.hero-editorial {
-  max-width: 980px;
-  margin: 0 auto;
-}
-
 .hero-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -784,27 +819,12 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   text-transform: uppercase;
 }
 
-.hero-headline {
-  font-size: clamp(42px, 7vw, 84px);
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -2px;
-  color: #ffffff;
-  margin-bottom: 24px;
-}
-
-/* User Explicit Request: Deep Space is pure electric cyan-blue */
-.blue-electric-text {
-  color: #00d9ff !important;
-  text-shadow: 0 0 35px rgba(0, 217, 255, 0.55), 0 0 10px rgba(0, 217, 255, 0.3);
-}
-
 .hero-subhead {
   font-size: clamp(16px, 2.2vw, 20px);
   color: #94a3b8;
   line-height: 1.6;
   max-width: 760px;
-  margin: 0 auto 40px;
+  margin: 0 auto 36px;
 }
 
 .hero-actions {
@@ -813,7 +833,7 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   justify-content: center;
   flex-wrap: wrap;
   gap: 16px;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
 }
 
 .hero-btn-main {

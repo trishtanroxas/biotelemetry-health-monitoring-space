@@ -64,8 +64,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
         </div>
       </header>
 
-      {/* SECTION 1B: Hero Section */}
+      {/* SECTION 1B: Minimal Initial Hero Viewport */}
       <section id="overview" className="hero-section">
+        <div className="hero-editorial">
+          <h1 className="hero-headline animate-slide-up">
+            HEALTH MONITORING<br />
+            <span className="blue-electric-text">DEEP SPACE.</span>
+          </h1>
+        </div>
+      </section>
+
+      {/* SECTION 1C: Introductory Platform Overview (Revealed on Scroll) */}
+      <section className="hero-intro-scroll-section">
         {/* Live Mission Status Telemetry Ticker */}
         <div className="hero-status-strip animate-fade-in">
           <div className="status-item">
@@ -88,38 +98,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
           </div>
         </div>
 
-        {/* Hero Editorial Composition */}
-        <div className="hero-editorial">
-          <div className="hero-eyebrow animate-slide-up">
-            <Sparkles className="h-4 w-4 text-cyan-400" />
-            <span>NASA INTERNATIONAL SPACE APPS CHALLENGE 2026</span>
-          </div>
+        <div className="hero-eyebrow animate-slide-up">
+          <Sparkles className="h-4 w-4 text-cyan-400" />
+          <span>NASA INTERNATIONAL SPACE APPS CHALLENGE 2026</span>
+        </div>
 
-          <h1 className="hero-headline animate-slide-up">
-            HEALTH MONITORING<br />
-            <span className="blue-electric-text">DEEP SPACE.</span>
-          </h1>
+        <p className="hero-subhead animate-slide-up-delayed">
+          An autonomous crew health monitoring architecture engineered to protect human life 
+          across the final frontier — even when Earth is millions of miles away.
+        </p>
 
-          <p className="hero-subhead animate-slide-up-delayed">
-            An autonomous crew health monitoring architecture engineered to protect human life 
-            across the final frontier — even when Earth is millions of miles away.
-          </p>
-
-          <div className="hero-actions animate-slide-up-delayed">
-            <button onClick={onEnterApp} className="hero-btn-main">
-              <span>Explore the Platform</span>
-              <ArrowRight className="h-5 w-5" />
-            </button>
-            <a 
-              href="https://github.com/trishtanroxas/biotelemetry-health-monitoring-space" 
-              target="_blank" 
-              rel="noreferrer"
-              className="hero-btn-ghost"
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>View GitHub Source</span>
-            </a>
-          </div>
+        <div className="hero-actions animate-slide-up-delayed">
+          <button onClick={onEnterApp} className="hero-btn-main">
+            <span>Explore the Platform</span>
+            <ArrowRight className="h-5 w-5" />
+          </button>
+          <a 
+            href="https://github.com/trishtanroxas/biotelemetry-health-monitoring-space" 
+            target="_blank" 
+            rel="noreferrer"
+            className="hero-btn-ghost"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span>View GitHub Source</span>
+          </a>
         </div>
       </section>
 
