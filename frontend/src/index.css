@@ -676,7 +676,8 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   justify-content: space-between;
   padding: 24px 36px;
   border-bottom: 1px solid rgba(30, 41, 59, 0.6);
-  backdrop-blur: 12px;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 .landing-brand {
@@ -797,6 +798,7 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
 .gradient-text {
   background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -874,7 +876,8 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   font-family: monospace;
   font-size: 12px;
   color: #94a3b8;
-  backdrop-blur: 10px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .pill-item {
@@ -917,7 +920,8 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
   border: 1px solid rgba(30, 41, 59, 0.8);
   border-radius: 16px;
   padding: 26px;
-  backdrop-blur: 10px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   text-align: left;
   transition: all 0.3s ease;
   display: flex;
