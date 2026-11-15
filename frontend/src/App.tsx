@@ -17,11 +17,15 @@ import { useEnvironment } from './hooks/useEnvironment';
 import { SpaceEnvironmentPanel } from './components/SpaceEnvironment';
 import { buildAssistantContext } from './services/ai';
 import { localDate, missionCatalog } from './services/missions';
+import { LandingPage } from './pages/LandingPage';
 import type { Page } from './types/wellness';
 
+type ExtendedPage = Page | 'landing';
+
 type Telemetry = ReturnType<typeof useTelemetry>;
-function getPage(): Page {
+function getPage(): ExtendedPage {
   const hash = window.location.hash.slice(1);
+  if (hash === '' || hash === 'landing') return 'landing';
   return ['dashboard', 'checkin', 'analytics', 'missions', 'ai'].includes(hash) ? hash as Page : 'dashboard';
 }
 function Workspace({ telemetry: t, page }: { telemetry: Telemetry; page: Page }) {
@@ -61,14 +65,25 @@ function Workspace({ telemetry: t, page }: { telemetry: Telemetry; page: Page })
 }
 export function App() {
   const telemetry = useTelemetry();
-  const [page, setPage] = useState<Page>(getPage);
+  const [page, setPage] = useState<ExtendedPage>(getPage);
   const [contrast, setContrast] = useState(false);
   const closeDiagnostic = useCallback(() => telemetry.setDiagnostic(null), [telemetry.setDiagnostic]);
   useEffect(() => {
     const navigate = () => { setPage(getPage()); window.scrollTo({ top: 0 }); };
     window.addEventListener('hashchange', navigate); return () => window.removeEventListener('hashchange', navigate);
   }, []);
-  useEffect(() => { document.title = `BioTelemetry · ${navigation.find(item => item.id === page)?.label}`; }, [page]);
+  useEffect(() => { 
+    if (page === 'landing') {
+      document.title = 'BioTelemetry · Deep Space Health Gateway';
+    } else {
+      document.title = `BioTelemetry · ${navigation.find(item => item.id === page)?.label ?? 'Dashboard'}`;
+    }
+  }, [page]);
+
+  if (page === 'landing') {
+    return <LandingPage onEnterApp={() => { window.location.hash = '#dashboard'; }} />;
+  }
+
   return <AppShell page={page} crew={telemetry.crew} activeId={telemetry.activeId} selectCrew={telemetry.setActiveId} crewDemo={telemetry.crewDemo} offline={telemetry.offline} gateway={telemetry.gateway} los={telemetry.los} toggleLos={() => telemetry.setLos(!telemetry.los)} pending={telemetry.pending} syncing={telemetry.syncing} sync={telemetry.sync} sound={telemetry.sound} toggleSound={() => telemetry.setSound(!telemetry.sound)} contrast={contrast} toggleContrast={() => setContrast(!contrast)}>
     {telemetry.error && <div role="alert" className="error-box global-message">{telemetry.error}<button onClick={() => telemetry.setError('')} aria-label="Dismiss error">Dismiss</button></div>}
     {telemetry.notice && <div role="status" className="warning-box">{telemetry.notice}</div>}
