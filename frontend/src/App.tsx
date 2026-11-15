@@ -1,381 +1,86 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Heart, 
-  Wind, 
-  Thermometer, 
-  Radio, 
-  Activity, 
-  Waves,
-  ClipboardList
-} from 'lucide-react';
-
-import { Navbar, MissionDestination } from './components/Navbar';
+﻿import { useCallback, useEffect, useState } from 'react';
+import { Activity, ArrowRight, ArrowUpRight, ClipboardCheck, Heart, Wind, Thermometer, Radio, Waves, Sparkles, Orbit, Check, Circle, CalendarDays, ShieldCheck } from 'lucide-react';
+import { AppShell, EmptyState, MissionProgress, PageHeading, navigation } from './components/AppShell';
+import { Disclosure } from './components/WellnessUI';
 import { VitalCard } from './components/VitalCard';
 import { ECGMonitor } from './components/ECGMonitor';
 import { AlertBanner } from './components/AlertBanner';
-import { CrewSelector } from './components/CrewSelector';
 import { AnomalyDemoBar } from './components/AnomalyDemoBar';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
-import { SymptomLoggerModal } from './components/SymptomLoggerModal';
-import { RadiationDosimeter } from './components/RadiationDosimeter';
+import { CheckInPage } from './pages/CheckInPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { MissionsPage } from './pages/MissionsPage';
+import { AIPage } from './pages/AIPage';
+import { useTelemetry } from './hooks/useTelemetry';
+import { useWellness } from './hooks/useWellness';
+import { useEnvironment } from './hooks/useEnvironment';
+import { SpaceEnvironmentPanel } from './components/SpaceEnvironment';
+import { buildAssistantContext } from './services/ai';
+import { localDate, missionCatalog } from './services/missions';
+import type { Page } from './types/wellness';
 
-import { 
-  fetchAstronauts, 
-  fetchLatestTelemetry, 
-  fetchAlerts, 
-  acknowledgeAlert, 
-  syncOfflineBatch, 
-  runDiagnostics 
-} from './services/api';
-import { soundService } from './services/sound';
-import { localDb } from './db/localDb';
-import { Astronaut, VitalSigns, AlertItem, DiagnosticResult } from './types/telemetry';
-
-export const App: React.FC = () => {
-  // Crew & active astronaut
-  const [crew, setCrew] = useState<Astronaut[]>([]);
-  const [activeAstronautId, setActiveAstronautId] = useState<string>('ASTRO-01');
-
-  // Mission Destination (Comms Latency Simulator)
-  const [missionDestination, setMissionDestination] = useState<MissionDestination>('ISS');
-
-  // Cumulative Radiation Counter (mSv)
-  const [cumulativeDose, setCumulativeDose] = useState<number>(14.25);
-
-  // Telemetry stream state
-  const [vitals, setVitals] = useState<VitalSigns>({
-    astronaut_id: 'ASTRO-01',
-    timestamp: new Date().toISOString(),
-    heart_rate: 68.0,
-    spo2: 98.4,
-    core_temp: 36.8,
-    radiation_rate: 14.5,
-    hrv: 52.0,
-    respiration_rate: 14.0,
-    battery_level: 96.5,
-    ecg_samples: []
-  });
-
-  // Alerts
-  const [alerts, setAlerts] = useState<AlertItem[]>([]);
-
-  // Simulation controls
-  const [anomalyMode, setAnomalyMode] = useState<string>('NONE');
-  const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
-  const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
-
-  // Modals
-  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
-  const [isDiagnosing, setIsDiagnosing] = useState<boolean>(false);
-  const [isSymptomModalOpen, setIsSymptomModalOpen] = useState<boolean>(false);
-
-  // Accessibility settings
-  const [highContrast, setHighContrast] = useState<boolean>(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-
-  // Load initial crew
+type Telemetry = ReturnType<typeof useTelemetry>;
+function getPage(): Page {
+  const hash = window.location.hash.slice(1);
+  return ['dashboard', 'checkin', 'analytics', 'missions', 'ai'].includes(hash) ? hash as Page : 'dashboard';
+}
+function Workspace({ telemetry: t, page }: { telemetry: Telemetry; page: Page }) {
+  const wellness = useWellness(t.activeId);
+  const environment = useEnvironment(t.activeId, t.vitals);
+  const astronaut = t.crew.find(member => member.id === t.activeId);
+  const today = localDate();
+  const observations = t.alerts.filter(alert => alert.astronaut_id === t.activeId);
+  const completed = wellness.completions.filter(item => item.date === today);
+  const latest = [...wellness.records].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  async function toggleMission(id: string) {
+    try { await wellness.toggleActivity(id, today); }
+    catch { /* The shared activity state exposes the failure and retry action. */ }
+  }
+  const v = t.vitals;
+  const todayRecord = [...wellness.records].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).find(record => localDate(new Date(record.createdAt)) === today);
+  return <>
+    {wellness.error && <div className="error-box" role="alert">{wellness.error}<button onClick={() => void wellness.reload()}>Retry local records</button></div>}
+    {wellness.loading && <div className="loading-line" role="status">Loading local wellness records…</div>}
+    {page === 'dashboard' && <>
+      <PageHeading eyebrow="YOUR DAY AT A GLANCE" title={`Hi, ${astronaut?.name.replace('Dr. ', '').split(' ')[0] ?? 'explorer'}.`} description="Start with how you feel. Explore more whenever you need to." action={<span className="date-label"><CalendarDays size={17} />{new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>} />
+      <section className="panel today-checkin"><span className="section-icon"><ClipboardCheck size={23} /></span><div><h2>{wellness.loading ? 'Checking today’s record…' : todayRecord ? 'You’ve checked in today.' : 'How are you feeling today?'}</h2><p>{todayRecord ? `You recorded your mood as ${todayRecord.mood.toLowerCase()}. Saved on this device at ${new Date(todayRecord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` : 'Record your sleep, mood and activity in three short steps.'}</p>{todayRecord && <small className="muted">Not yet sent to the server.</small>}{!todayRecord && latest && <small className="muted">Last check-in: {new Date(latest.createdAt).toLocaleDateString()}</small>}</div><a href="#checkin" className="button primary">Record Today’s Health<ArrowRight size={17} /></a></section>
+      <div className="dashboard-grid"><div className="dashboard-primary"><div className="section-heading"><h2>Health measurements</h2><span className="pill">Demo measurements</span></div><p className="section-description">These readings are simulated. They don’t tell us whether you are medically well.</p>
+        <div className="vitals-grid"><VitalCard label="Heart Rate" value={v.heart_rate} unit="beats/min" icon={Heart} status={v.heart_rate > 120 || v.heart_rate < 45 ? 'CRITICAL' : v.heart_rate > 100 || v.heart_rate < 50 ? 'WARNING' : 'NORMAL'} baseline="Simulated pulse" ariaLabel={`Simulated heart rate ${v.heart_rate} beats per minute`} /><VitalCard label="Blood Oxygen" value={v.spo2} unit="%" icon={Wind} status={v.spo2 < 90 ? 'CRITICAL' : v.spo2 < 95 ? 'WARNING' : 'NORMAL'} baseline="Simulated oxygen level" ariaLabel={`Simulated blood oxygen ${v.spo2} percent`} /><VitalCard label="Body Temperature" value={v.core_temp} unit="°C" icon={Thermometer} status={v.core_temp > 37.8 ? 'WARNING' : 'NORMAL'} baseline="Simulated temperature" ariaLabel={`Simulated temperature ${v.core_temp} Celsius`} /><VitalCard label="Breathing Rate" value={v.respiration_rate ?? '—'} unit="breaths/min" icon={Wind} status="NORMAL" baseline="Simulated breathing" ariaLabel={`Simulated breathing rate ${v.respiration_rate ?? 'unavailable'} breaths per minute`} /></div>
+        <section className="panel observation-panel"><div className="section-heading"><h2><ShieldCheck size={19} />Things to review</h2><span className="pill">{observations.filter(a => !a.acknowledged).length} to review</span></div><AlertBanner alerts={observations} onAcknowledge={t.acknowledge} /><p className="helper">{t.gateway ? 'Demo notifications show readings the system flagged for review. They are not a diagnosis.' : 'The notification connection is unavailable. This demo cannot check for new notifications.'}</p><a href="#analytics" className="text-link">See past notifications and trends<ArrowRight size={16} /></a></section>
+        <Disclosure title="More measurements and heart waveform"><p className="helper">The ECG is a picture of the heart’s electrical activity. This demo waveform is illustrative, not a medical test.</p><ECGMonitor key={t.activeId} ecgSamples={v.ecg_samples} heartRate={v.heart_rate} /><div className="advanced-vitals"><VitalCard label="Heart rate variability (HRV)" value={v.hrv} unit="ms" icon={Waves} status="NORMAL" baseline="Simulated HRV" ariaLabel={`Simulated HRV ${v.hrv} milliseconds`} /><p className="helper">HRV describes variation in the time between heartbeats. It cannot establish health status on its own.</p></div><div className="secondary-vitals"><div><Radio size={19} /><span>Environmental radiation<strong>{v.radiation_rate} <small>μSv/h</small></strong>{v.radiation_rate >= 30 && <small className="warning-text">{v.radiation_rate >= 60 ? 'Critical' : 'Warning'} simulation range</small>}</span></div><div><Activity size={19} /><span>Blood pressure<strong>{v.systolic_bp !== undefined && v.diastolic_bp !== undefined ? `${v.systolic_bp}/${v.diastolic_bp}` : '—'} <small>mmHg</small></strong></span></div><div><Activity size={19} /><span>Suit battery<strong>{v.battery_level ?? '—'} <small>%</small></strong></span></div></div><a href="#analytics" className="text-link">View My Health Trends<ArrowRight size={16} /></a></Disclosure>
+      </div><aside className="dashboard-aside stack"><section className="panel daily-panel"><div className="section-heading"><h2><Orbit size={20} />Daily Activities</h2></div>{wellness.loading ? <p role="status">Loading saved activity progress…</p> : wellness.activitiesError ? <p className="helper">Saved activity progress is unavailable. Please retry loading.</p> : <MissionProgress completed={completed.length} />}<div className="mini-missions">{[missionCatalog[0], missionCatalog[3], missionCatalog[6]].map(mission => { const done = completed.some(item => item.missionId === mission.id); return <button key={mission.id} onClick={() => void toggleMission(mission.id)} disabled={wellness.loading || wellness.activitySaving || !!wellness.activitiesError} aria-pressed={done}>{done ? <Check size={19} className="success-text" /> : <Circle size={19} />}<span>{mission.title}</span></button>; })}</div><a href="#missions" className="text-link">See all activities<ArrowRight size={16} /></a></section><a href="#ai" className="panel quick-action ai-action"><span className="section-icon"><Sparkles size={22} /></span><ArrowUpRight size={19} /><h3>Have a question?</h3><p>Ask about your saved records or today’s activities.</p><span className="text-link">Open AI Assistant<ArrowRight size={16} /></span></a></aside></div>
+      <SpaceEnvironmentPanel context={environment.context} settings={environment.settings} settingsError={environment.error} records={wellness.records} onSave={environment.save} />
+      <Disclosure title="Mission details and simulation tools"><p className="helper">{astronaut?.role} · {t.activeId} · Demo mission · Mission day is not supplied by the server</p><p className="helper">Measurement source: {t.gateway ? 'connected simulation server' : 'local demo'}. Updated {new Date(v.timestamp).toLocaleTimeString()}. Diagnostic reports are unvalidated demo output.</p><AnomalyDemoBar currentAnomaly={t.anomaly} onTrigger={t.setAnomaly} onRunDiagnostics={t.diagnose} isDiagnosing={t.diagnosing} /></Disclosure>
+    </>}
+    <div hidden={page !== 'checkin'}><CheckInPage astronautId={t.activeId} vitals={v} records={wellness.records} offline={t.offline} gateway={t.gateway} onSaved={wellness.acceptCheckIn} historyLoading={wellness.loading} historyError={wellness.recordsError} environment={environment.context} /></div>
+    {page === 'analytics' && !wellness.loading && !wellness.recordsError && <AnalyticsPage records={wellness.records} astronaut={astronaut} alerts={observations} />}
+    {page === 'missions' && <MissionsPage checkedIn={!!todayRecord} astronautId={t.activeId} completions={wellness.completions} onToggle={wellness.toggleActivity} loading={wellness.loading} loadError={wellness.activitiesError} activitySaving={wellness.activitySaving} />}
+    <div hidden={page !== 'ai'}><AIPage context={buildAssistantContext(t.activeId, wellness.records, observations, wellness.completions, environment.context)} offline={t.offline} recordsLoading={wellness.loading || wellness.activitySaving} recordsError={wellness.error} /></div>
+    {!astronaut && <EmptyState title="No astronaut selected">Choose a crew member from the header.</EmptyState>}
+  </>;
+}
+export function App() {
+  const telemetry = useTelemetry();
+  const [page, setPage] = useState<Page>(getPage);
+  const [contrast, setContrast] = useState(false);
+  const closeDiagnostic = useCallback(() => telemetry.setDiagnostic(null), [telemetry.setDiagnostic]);
   useEffect(() => {
-    fetchAstronauts().then((data) => {
-      setCrew(data);
-      if (data.length > 0) setActiveAstronautId(data[0].id);
-    });
+    const navigate = () => { setPage(getPage()); window.scrollTo({ top: 0 }); };
+    window.addEventListener('hashchange', navigate); return () => window.removeEventListener('hashchange', navigate);
   }, []);
-
-  // Update pending offline sync count from IndexedDB
-  const updateOfflineCount = useCallback(async () => {
-    try {
-      const count = await localDb.vitalsQueue.where('syncedToCloud').equals(0).count();
-      setPendingSyncCount(count);
-    } catch {
-      // Local DB fallback
-    }
-  }, []);
-
-  useEffect(() => {
-    updateOfflineCount();
-  }, [updateOfflineCount]);
-
-  // Main Telemetry Loop
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      // Small cumulative dose accumulation
-      setCumulativeDose((prev) => prev + (vitals.radiation_rate / (3600 * 1000)));
-
-      // If simulated Mars or Offline, run autonomous edge mode
-      const isAutonomousMode = isOfflineMode || missionDestination === 'MARS';
-
-      if (isAutonomousMode && isOfflineMode) {
-        // Space communication blackout / Loss of Signal:
-        const simulatedOfflineVitals: VitalSigns = {
-          astronaut_id: activeAstronautId,
-          timestamp: new Date().toISOString(),
-          heart_rate: Math.round(65 + Math.random() * 8),
-          spo2: 98.2,
-          core_temp: 36.8,
-          radiation_rate: Math.round((13 + Math.random() * 2) * 10) / 10,
-          hrv: 54.0,
-          respiration_rate: 14.0,
-          battery_level: 95.0,
-          ecg_samples: []
-        };
-        setVitals(simulatedOfflineVitals);
-        await localDb.vitalsQueue.add({
-          ...simulatedOfflineVitals,
-          syncedToCloud: false
-        });
-        updateOfflineCount();
-        return;
-      }
-
-      try {
-        const latest = await fetchLatestTelemetry(activeAstronautId, anomalyMode);
-        setVitals(latest);
-        soundService.playBlip();
-
-        // Check alerts
-        const currentAlerts = await fetchAlerts();
-        setAlerts(currentAlerts);
-
-        const hasCritical = currentAlerts.some((a) => a.severity === 'CRITICAL' && !a.acknowledged);
-        if (hasCritical) {
-          soundService.playEmergencyAlarm();
-        }
-      } catch (err) {
-        // Network timeout / offline fallback
-      }
-    }, 1200);
-
-    return () => clearInterval(interval);
-  }, [activeAstronautId, anomalyMode, isOfflineMode, missionDestination, vitals.radiation_rate, updateOfflineCount]);
-
-  // Handle Offline Reconnection & Batch Sync
-  const handleSync = async () => {
-    setIsSyncing(true);
-    try {
-      const unSynced = await localDb.vitalsQueue.where('syncedToCloud').equals(0).toArray();
-      if (unSynced.length > 0) {
-        await syncOfflineBatch(activeAstronautId, unSynced);
-        await localDb.vitalsQueue.clear();
-        setPendingSyncCount(0);
-      }
-    } catch (e) {
-      console.error('Batch sync failed', e);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Keyboard Accessibility
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-
-      if (e.key === ' ' && alerts.some((a) => !a.acknowledged)) {
-        e.preventDefault();
-        const unacked = alerts.find((a) => !a.acknowledged);
-        if (unacked) handleAcknowledgeAlert(unacked.id);
-      } else if (e.key === '1' && crew[0]) {
-        setActiveAstronautId(crew[0].id);
-      } else if (e.key === '2' && crew[1]) {
-        setActiveAstronautId(crew[1].id);
-      } else if (e.key === '3' && crew[2]) {
-        setActiveAstronautId(crew[2].id);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [alerts, crew]);
-
-  const handleAcknowledgeAlert = async (id: string) => {
-    await acknowledgeAlert(id);
-    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, acknowledged: true } : a)));
-  };
-
-  const handleRunDiagnostics = async () => {
-    setIsDiagnosing(true);
-    try {
-      const res = await runDiagnostics(activeAstronautId);
-      setDiagnosticResult(res);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsDiagnosing(false);
-    }
-  };
-
-  const getHrStatus = () => {
-    if (vitals.heart_rate > 120 || vitals.heart_rate < 45) return 'CRITICAL';
-    if (vitals.heart_rate > 100 || vitals.heart_rate < 50) return 'WARNING';
-    return 'NORMAL';
-  };
-
-  const getSpo2Status = () => {
-    if (vitals.spo2 < 90) return 'CRITICAL';
-    if (vitals.spo2 < 95) return 'WARNING';
-    return 'NORMAL';
-  };
-
-  const getRadStatus = () => {
-    if (vitals.radiation_rate >= 60) return 'CRITICAL';
-    if (vitals.radiation_rate >= 30) return 'WARNING';
-    return 'NORMAL';
-  };
-
-  return (
-    <div className={`min-h-screen bg-[#030712] text-slate-100 flex flex-col ${highContrast ? 'high-contrast' : ''}`}>
-      {/* Top Navigation with Latency Simulator */}
-      <Navbar
-        isOfflineMode={isOfflineMode}
-        onToggleOffline={() => setIsOfflineMode((prev) => !prev)}
-        pendingSyncCount={pendingSyncCount}
-        onManualSync={handleSync}
-        isSyncing={isSyncing}
-        highContrast={highContrast}
-        onToggleHighContrast={() => setHighContrast((prev) => !prev)}
-        soundEnabled={soundEnabled}
-        onToggleSound={() => {
-          soundService.enabled = !soundEnabled;
-          setSoundEnabled((prev) => !prev);
-        }}
-        missionDestination={missionDestination}
-        onChangeDestination={(dest) => setMissionDestination(dest)}
-      />
-
-      {/* Main Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-4">
-        {/* Emergency Alert Banner */}
-        <AlertBanner alerts={alerts} onAcknowledge={handleAcknowledgeAlert} />
-
-        {/* Top Controls: Crew Selector & SANS Symptom Logger Button */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          <div className="lg:col-span-3">
-            <CrewSelector
-              crew={crew}
-              activeId={activeAstronautId}
-              onSelect={(id) => setActiveAstronautId(id)}
-              suitBattery={vitals.battery_level}
-            />
-          </div>
-          <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 backdrop-blur shadow-lg flex flex-col justify-between">
-            <div>
-              <div className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
-                Self-Evaluation Check
-              </div>
-              <p className="text-[11px] text-slate-400 mt-1">
-                Log vision changes (SANS), cephalic pressure, and space motion sickness.
-              </p>
-            </div>
-            <button
-              onClick={() => setIsSymptomModalOpen(true)}
-              className="mt-3 w-full py-2 px-3 rounded-lg bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-200 text-xs font-mono font-bold uppercase transition flex items-center justify-center gap-1.5"
-            >
-              <ClipboardList className="h-4 w-4 text-cyan-300" />
-              Log Symptoms (SANS)
-            </button>
-          </div>
-        </div>
-
-        {/* Live Continuous ECG Waveform */}
-        <ECGMonitor ecgSamples={vitals.ecg_samples} heartRate={vitals.heart_rate} />
-
-        {/* Primary Biometrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <VitalCard
-            label="Heart Rate"
-            value={vitals.heart_rate}
-            unit="BPM"
-            icon={Heart}
-            status={getHrStatus()}
-            baseline="60 - 100 BPM"
-            ariaLabel={`Heart rate is ${vitals.heart_rate} beats per minute. Status: ${getHrStatus()}`}
-          />
-          <VitalCard
-            label="Blood Oxygen (SpO2)"
-            value={`${vitals.spo2}%`}
-            unit="O2 Sat"
-            icon={Wind}
-            status={getSpo2Status()}
-            baseline="95 - 100%"
-            ariaLabel={`Blood oxygen is ${vitals.spo2} percent. Status: ${getSpo2Status()}`}
-          />
-          <VitalCard
-            label="Core Temperature"
-            value={vitals.core_temp}
-            unit="°C"
-            icon={Thermometer}
-            status={vitals.core_temp > 37.8 ? 'WARNING' : 'NORMAL'}
-            baseline="36.5 - 37.3 °C"
-            ariaLabel={`Core temperature is ${vitals.core_temp} degrees Celsius`}
-          />
-          <VitalCard
-            label="Ambient Radiation"
-            value={vitals.radiation_rate}
-            unit="μSv/h"
-            icon={Radio}
-            status={getRadStatus()}
-            baseline="< 25 μSv/h"
-            ariaLabel={`Radiation rate is ${vitals.radiation_rate} micro Sieverts per hour`}
-          />
-        </div>
-
-        {/* Cumulative Radiation Dosimeter vs NASA Limits */}
-        <RadiationDosimeter
-          currentRate={vitals.radiation_rate}
-          cumulativeDose={cumulativeDose}
-        />
-
-        {/* Secondary Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs font-mono text-slate-300">
-          <div className="flex items-center gap-2">
-            <Waves className="h-4 w-4 text-cyan-400" />
-            <span>HRV: <strong className="text-white">{vitals.hrv} ms</strong></span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-emerald-400" />
-            <span>Resp: <strong className="text-white">{vitals.respiration_rate} rpm</strong></span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500">BP:</span>
-            <span><strong className="text-white">{vitals.systolic_bp}/{vitals.diastolic_bp}</strong> mmHg</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500">Comms Mode:</span>
-            <span className="text-cyan-400 font-bold">
-              {missionDestination === 'MARS' || isOfflineMode ? 'AUTONOMOUS EDGE' : 'GROUND ASSISTED'}
-            </span>
-          </div>
-        </div>
-
-        {/* Simulation Controls Bar */}
-        <AnomalyDemoBar
-          currentAnomaly={anomalyMode}
-          onTrigger={(mode) => setAnomalyMode(mode)}
-          onRunDiagnostics={handleRunDiagnostics}
-          isDiagnosing={isDiagnosing}
-        />
-      </main>
-
-      {/* Diagnostics Report Modal */}
-      <DiagnosticsModal
-        result={diagnosticResult}
-        onClose={() => setDiagnosticResult(null)}
-      />
-
-      {/* SANS Self-Evaluation Symptom Logger Modal */}
-      <SymptomLoggerModal
-        isOpen={isSymptomModalOpen}
-        onClose={() => setIsSymptomModalOpen(false)}
-        astronautId={activeAstronautId}
-      />
-
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 p-4 text-center text-xs font-mono text-slate-500">
-        NASA International Space Apps Challenge • Astronaut Biotelemetry PWA • Powered by React, Vite, FastAPI & Supabase
-      </footer>
-    </div>
-  );
-};
-
+  useEffect(() => { document.title = `BioTelemetry · ${navigation.find(item => item.id === page)?.label}`; }, [page]);
+  return <AppShell page={page} crew={telemetry.crew} activeId={telemetry.activeId} selectCrew={telemetry.setActiveId} crewDemo={telemetry.crewDemo} offline={telemetry.offline} gateway={telemetry.gateway} los={telemetry.los} toggleLos={() => telemetry.setLos(!telemetry.los)} pending={telemetry.pending} syncing={telemetry.syncing} sync={telemetry.sync} sound={telemetry.sound} toggleSound={() => telemetry.setSound(!telemetry.sound)} contrast={contrast} toggleContrast={() => setContrast(!contrast)}>
+    {telemetry.error && <div role="alert" className="error-box global-message">{telemetry.error}<button onClick={() => telemetry.setError('')} aria-label="Dismiss error">Dismiss</button></div>}
+    {telemetry.notice && <div role="status" className="warning-box">{telemetry.notice}</div>}
+    <Workspace key={telemetry.activeId} telemetry={telemetry} page={page} />
+    <DiagnosticsModal result={telemetry.diagnostic} onClose={closeDiagnostic} />
+  </AppShell>;
+}
 export default App;
+
+
+
+
+
+
+
