@@ -497,7 +497,7 @@ input[type=range] { min-height: 44px; }
 .quick-action h3 { margin-top: 16px; }
 .quick-action p, .text-link { font-size: 14px; }
 .helper { font-size: 13px; }
-.checkin-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; width: 100%; }
+.checkin-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; width: 100%; align-items: start; }
 @media(min-width: 1024px) {
   .checkin-workspace { grid-template-columns: minmax(0, 1fr) 310px; }
 }

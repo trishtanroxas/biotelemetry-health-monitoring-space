@@ -52,10 +52,9 @@ export function CheckInPage({ astronautId, vitals, records, offline, gateway, on
   }
   return <>
     <PageHeading eyebrow="DAILY CHECK-IN" title="Record how you feel." description="Three short steps. Unfinished answers are kept on this device for your next visit." />
+    {recovery.draftError && <p className="warning-box" role="alert">{recovery.draftError}</p>}
     <div className="checkin-workspace">
       <div className="checkin-primary">
-        <p className="helper" role="status">{recovery.draftStatus}</p>
-        {recovery.draftError && <p className="warning-box" role="alert">{recovery.draftError}</p>}
         <form noValidate onSubmit={submit} className="panel checkin-form">
           <div className="wizard-progress"><span role="status">Step {step + 1} of 3</span><progress aria-label="Check-in step" value={step + 1} max={3} /><ol>{steps.map((title, index) => <li key={title} aria-current={step === index ? 'step' : undefined}><span>{index + 1}</span>{title}</li>)}</ol></div>
           <h2 ref={heading} tabIndex={-1} className="wizard-heading">{steps[step]}</h2>
@@ -98,12 +97,12 @@ export function CheckInPage({ astronautId, vitals, records, offline, gateway, on
           <div className="section-heading">
             <h2 style={{ fontSize: '15px' }}>Draft & History</h2>
           </div>
-          <p className="helper" style={{ fontSize: '12px', margin: '6px 0 12px' }}>
+          <p className="helper" role="status" style={{ fontSize: '12px', margin: '6px 0 10px', color: 'var(--accent)' }}>
+            {recovery.draftStatus}
+          </p>
+          <p className="helper" style={{ fontSize: '12px', margin: '0 0 12px' }}>
             <strong>Last check-in:</strong><br />
             {historyLoading ? 'Loading saved records…' : historyError ? 'Saved history is unavailable.' : latest ? new Date(latest.createdAt).toLocaleString() : 'None saved yet'}
-          </p>
-          <p className="helper" style={{ fontSize: '12px', margin: '0 0 14px' }}>
-            Unfinished answers autosave locally on this device as you type.
           </p>
           <a href="#analytics" className="text-link" style={{ fontSize: '13px' }}>
             View Health Trends & History →
