@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { LayoutDashboard, ClipboardCheck, BarChart3, Orbit, Sparkles, Wifi, WifiOff, ChevronRight, Volume2, VolumeX, Contrast, RefreshCw, ArrowLeft } from 'lucide-react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
+import { LayoutDashboard, ClipboardCheck, BarChart3, Orbit, Sparkles, Wifi, WifiOff, ChevronRight, ChevronDown, Volume2, VolumeX, Contrast, RefreshCw, ArrowLeft, Settings } from 'lucide-react';
 import type { Astronaut } from '../types/telemetry';
 import type { Page } from '../types/wellness';
 import { NotificationCenter } from './NotificationCenter';
@@ -26,7 +26,31 @@ interface ShellProps {
   contrast: boolean; toggleContrast(): void;
 }
 export function AppShell(props: ShellProps) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const current = navigation.find(item => item.id === props.page)!;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setSettingsOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setSettingsOpen(false);
+      }
+    }
+    if (settingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [settingsOpen]);
+
   return <div className={`app-shell ${props.contrast ? 'high-contrast' : ''}`}>
     <a className="skip-link" href="#main-content" onClick={event => { event.preventDefault(); document.getElementById('main-content')?.focus(); }}>Skip to content</a>
     <aside className="sidebar">
@@ -79,26 +103,62 @@ export function AppShell(props: ShellProps) {
               </button>
             )}
 
-            <details className="utility-settings header-settings-inline">
-              <summary>Settings & connection</summary>
-              <div className="utility-actions">
-                <button onClick={props.toggleSound} aria-pressed={props.sound}>
-                  {props.sound ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                  Sound {props.sound ? 'on' : 'off'}
-                </button>
-                <button onClick={props.toggleContrast} aria-pressed={props.contrast}>
-                  <Contrast size={16} />
-                  High contrast {props.contrast ? 'on' : 'off'}
-                </button>
-                <button onClick={props.toggleLos} aria-pressed={props.los}>
-                  <WifiOff size={15} />
-                  {props.los ? 'End offline test' : 'Test offline mode'}
-                </button>
-                <p className="helper">
-                  The offline test stores simulated measurements on this device. Reconnect to send them. Records stay here until the server confirms they were saved.
-                </p>
-              </div>
-            </details>
+            <div className="header-settings-dropdown-wrapper" ref={settingsRef}>
+              <button
+                type="button"
+                className={`header-settings-btn ${settingsOpen ? 'active' : ''}`}
+                onClick={() => setSettingsOpen(prev => !prev)}
+                aria-expanded={settingsOpen}
+                aria-haspopup="true"
+                aria-label="Settings and connection controls"
+                title="Settings & connection"
+              >
+                <Settings size={15} />
+                <span className="header-settings-label">Settings</span>
+                <ChevronDown size={13} className={`settings-chevron ${settingsOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {settingsOpen && (
+                <div className="header-settings-popover" role="menu">
+                  <div className="header-settings-popover-header">
+                    <h4>Settings & Connection</h4>
+                    <span className="helper">Offline & system preferences</span>
+                  </div>
+                  <div className="utility-actions">
+                    <button 
+                      type="button"
+                      onClick={props.toggleSound} 
+                      aria-pressed={props.sound}
+                      className="settings-action-btn"
+                    >
+                      {props.sound ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                      <span>Sound {props.sound ? 'on' : 'off'}</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={props.toggleContrast} 
+                      aria-pressed={props.contrast}
+                      className="settings-action-btn"
+                    >
+                      <Contrast size={16} />
+                      <span>High contrast {props.contrast ? 'on' : 'off'}</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={props.toggleLos} 
+                      aria-pressed={props.los}
+                      className="settings-action-btn"
+                    >
+                      <WifiOff size={15} />
+                      <span>{props.los ? 'End offline test' : 'Test offline mode'}</span>
+                    </button>
+                    <p className="helper">
+                      The offline test stores simulated measurements on this device. Reconnect to send them. Records stay here until the server confirms they were saved.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <NotificationCenter />
 

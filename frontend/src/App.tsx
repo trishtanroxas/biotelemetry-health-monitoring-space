@@ -74,9 +74,11 @@ function AppContent() {
     if (page === 'landing') return; // Do not process or fire notifications on landing page
     if (!telemetry.alerts) return;
 
+    // Only process unacknowledged/active alerts for live toasts and notification entries
+    const unacknowledgedAlerts = telemetry.alerts.filter(alert => !alert.acknowledged);
     const currentAlertTypes = new Set<string>();
 
-    telemetry.alerts.forEach(alert => {
+    unacknowledgedAlerts.forEach(alert => {
       // Stable episode fingerprint: one active episode per astronaut + alert_type
       const episodeKey = `${alert.astronaut_id}:${alert.alert_type}`;
       currentAlertTypes.add(episodeKey);

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Markdown from 'react-markdown';
 import { 
   Sparkles, 
   X, 
@@ -9,10 +8,14 @@ import {
   ArrowUpRight, 
   RotateCcw, 
   User, 
-  Loader2 
+  Loader2,
+  Mic,
+  Square
 } from 'lucide-react';
 import { askPublicMissionGuideApi } from '../services/api';
 import biotelemetryMark from '../assets/biotelemetry-mark.png';
+import { AIResponseRenderer } from './AIResponseRenderer';
+import { useLiveSpeechRecognition } from '../hooks/useLiveSpeech';
 
 interface GuideMessage {
   id: string;
@@ -23,9 +26,9 @@ interface GuideMessage {
 
 const SUGGESTED_QUERIES = [
   'What is BioTelemetry?',
+  'Compare our technologies in a table',
   'How does it work without internet?',
   'What are the system innovations?',
-  'What is the technology stack?',
 ];
 
 export const PublicMissionGuideModal: React.FC = () => {
@@ -48,6 +51,30 @@ export const PublicMissionGuideModal: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Live Speech Recognition Hook
+  const {
+    isSupported: isSpeechSupported,
+    isListening,
+    interimText,
+    finalText,
+    setFinalText,
+    error: speechError,
+    startListening,
+    stopListening,
+    clearTranscript,
+  } = useLiveSpeechRecognition({
+    onFinalTranscript: (text) => {
+      setInput(prev => (prev ? `${prev} ${text}` : text).trim());
+    },
+  });
+
+  // When speech finalizes into hook state, sync it with the input box if input is empty
+  useEffect(() => {
+    if (finalText) {
+      setInput(finalText);
+    }
+  }, [finalText]);
+
   useEffect(() => {
     if (isOpen && !isMinimized) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -57,6 +84,10 @@ export const PublicMissionGuideModal: React.FC = () => {
   }, [messages, isOpen, isMinimized]);
 
   async function handleSend(textToSend?: string) {
+    if (isListening) {
+      stopListening();
+    }
+
     const text = (textToSend || input).trim();
     if (!text || loading) return;
 
@@ -70,11 +101,11 @@ export const PublicMissionGuideModal: React.FC = () => {
     const currentHistory = [...messages, userMsg];
     setMessages(currentHistory);
     setInput('');
+    clearTranscript();
     setLoading(true);
     setError('');
 
     try {
-      // Build lightweight history payload for the public endpoint
       const historyPayload = currentHistory
         .filter(m => m.id !== 'welcome')
         .map(m => ({ role: m.role, content: m.content }));
@@ -140,8 +171,8 @@ export const PublicMissionGuideModal: React.FC = () => {
       {/* Floating Chat Window */}
       {isOpen && (
         <div 
-          className={`pointer-events-auto flex flex-col w-[92vw] sm:w-[460px] bg-[#071526]/98 border border-cyan-500/40 rounded-2xl shadow-[0_12px_45px_rgba(0,0,0,0.85)] backdrop-blur-2xl overflow-hidden transition-all duration-300 ${
-            isMinimized ? 'h-[58px]' : 'h-[620px] max-h-[85vh]'
+          className={`pointer-events-auto flex flex-col w-[94vw] sm:w-[490px] bg-[#071526]/98 border border-cyan-500/40 rounded-2xl shadow-[0_12px_45px_rgba(0,0,0,0.85)] backdrop-blur-2xl overflow-hidden transition-all duration-300 ${
+            isMinimized ? 'h-[58px]' : 'h-[640px] max-h-[88vh]'
           }`}
           role="dialog"
           aria-labelledby="guide-title"
@@ -173,7 +204,10 @@ export const PublicMissionGuideModal: React.FC = () => {
                 <Minus size={14} />
               </button>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  if (isListening) stopListening();
+                  setIsOpen(false);
+                }}
                 className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-slate-800/60 transition-colors"
                 title="Close Mission Guide"
                 aria-label="Close guide"
@@ -210,7 +244,7 @@ export const PublicMissionGuideModal: React.FC = () => {
                     </div>
 
                     <div
-                      className={`p-3.5 rounded-xl max-w-[86%] sm:max-w-[84%] leading-relaxed ${
+                      className={`p-3.5 rounded-xl max-w-[88%] sm:max-w-[86%] leading-relaxed ${
                         msg.role === 'user'
                           ? 'bg-cyan-600/25 border border-cyan-500/40 text-cyan-100 rounded-tr-none'
                           : 'bg-[#0a1a2c]/95 border border-slate-800 text-slate-200 rounded-tl-none shadow-md'
@@ -221,17 +255,7 @@ export const PublicMissionGuideModal: React.FC = () => {
                           {msg.content}
                         </div>
                       ) : (
-                        <div className="markdown-body font-sans text-xs">
-                          <Markdown
-                            components={{
-                              a: ({ node, ...props }) => (
-                                <a {...props} target="_blank" rel="noopener noreferrer" />
-                              ),
-                            }}
-                          >
-                            {msg.content}
-                          </Markdown>
-                        </div>
+                        <AIResponseRenderer content={msg.content} />
                       )}
                       <div className="mt-2 text-[9px] text-slate-500 text-right font-mono">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -263,8 +287,73 @@ export const PublicMissionGuideModal: React.FC = () => {
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* LIVE SPEECH TRANSCRIPTION OVERLAY */}
+              {isListening && (
+                <div className="mx-3 mb-2 p-2.5 rounded-xl bg-[#081f33] border border-cyan-500/60 shadow-[0_0_15px_rgba(0,217,255,0.2)] animate-in fade-in">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-cyan-300 mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
+                      </span>
+                      <span>LIVE VOICE TRANSCRIPTION</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">Listening...</span>
+                  </div>
+                  
+                  <div className="p-2 rounded bg-[#040e1a] border border-slate-700/60 text-xs text-white min-h-[44px] max-h-24 overflow-y-auto font-sans leading-relaxed">
+                    {input || interimText ? (
+                      <>
+                        <span className="text-white">{input}</span>
+                        {interimText && <span className="text-cyan-400 italic"> {interimText}</span>}
+                      </>
+                    ) : (
+                      <span className="text-slate-500 italic">Speak now... your words will appear live here</span>
+                    )}
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearTranscript();
+                        setInput('');
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-slate-200 px-2 py-1 rounded bg-slate-800/60 transition-colors"
+                    >
+                      Clear
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={stopListening}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-300 bg-rose-950/70 border border-rose-800/60 px-2.5 py-1 rounded hover:bg-rose-900 transition-colors"
+                      >
+                        <Square size={11} />
+                        <span>Stop</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleSend()}
+                        disabled={!input.trim() && !interimText.trim()}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 px-3 py-1 rounded transition-colors disabled:opacity-30"
+                      >
+                        <Send size={11} />
+                        <span>Send</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {speechError && (
+                <div className="mx-3 mb-2 p-2 rounded bg-amber-950/60 border border-amber-800 text-[10px] text-amber-300">
+                  {speechError}
+                </div>
+              )}
+
               {/* Suggested Questions Pills */}
-              {messages.length <= 2 && (
+              {messages.length <= 2 && !isListening && (
                 <div className="px-3 pb-2 pt-1 border-t border-slate-800/60 bg-[#071322]/40">
                   <div className="text-[10px] text-slate-400 font-semibold mb-1.5 flex items-center gap-1">
                     <Sparkles size={11} className="text-cyan-400" />
@@ -294,17 +383,44 @@ export const PublicMissionGuideModal: React.FC = () => {
                 }}
                 className="p-3 bg-[#081525] border-t border-slate-800 flex items-center gap-2"
               >
+                {/* Live Speech Mic Toggle */}
+                {isSpeechSupported && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isListening) {
+                        stopListening();
+                      } else {
+                        startListening();
+                      }
+                    }}
+                    title={isListening ? 'Stop live voice recognition' : 'Start live voice recognition'}
+                    className={`p-2 rounded-lg border transition-all flex-shrink-0 ${
+                      isListening
+                        ? 'bg-rose-500/20 border-rose-500 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.4)] animate-pulse'
+                        : 'bg-[#050e18] border-slate-700 hover:border-cyan-400 text-cyan-300 hover:bg-cyan-950/30'
+                    }`}
+                    aria-label="Toggle live voice input"
+                  >
+                    <Mic size={15} />
+                  </button>
+                )}
+
                 <input
                   ref={inputRef}
                   type="text"
                   value={input}
-                  onChange={e => setInput(e.target.value)}
+                  onChange={e => {
+                    setInput(e.target.value);
+                    setFinalText(e.target.value);
+                  }}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask about BioTelemetry's architecture, offline edge..."
+                  placeholder={isListening ? 'Listening live...' : 'Ask about architecture, offline edge, or speak...'}
                   disabled={loading}
                   maxLength={500}
                   className="flex-1 bg-[#050e18] border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
                 />
+
                 <button
                   type="submit"
                   disabled={!input.trim() || loading}

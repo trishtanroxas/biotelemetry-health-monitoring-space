@@ -53,7 +53,7 @@ export function CheckInPage({ astronautId, vitals, records, offline, gateway, on
   return <>
     <PageHeading eyebrow="DAILY CHECK-IN" title="Record how you feel." description="Three short steps. Unfinished answers are kept on this device for your next visit." />
     {recovery.draftError && <p className="warning-box" role="alert">{recovery.draftError}</p>}
-    <div className="checkin-workspace">
+    <div className="checkin-workspace form-layout">
       <div className="checkin-primary">
         <form noValidate onSubmit={submit} className="panel checkin-form">
           <div className="wizard-progress"><span role="status">Step {step + 1} of 3</span><progress aria-label="Check-in step" value={step + 1} max={3} /><ol>{steps.map((title, index) => <li key={title} aria-current={step === index ? 'step' : undefined}><span>{index + 1}</span>{title}</li>)}</ol></div>
