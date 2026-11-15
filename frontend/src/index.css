@@ -1005,3 +1005,165 @@ input[type=datetime-local] { min-width: 0; max-width: 100%; }
 .animate-fade-in { animation: fadeIn 0.8s ease forwards; }
 .animate-slide-up { animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-slide-up-delayed { animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+
+
+/* =========================================================================
+   FRAMEWORKS & TEAM BIOTELEMETRY SECTIONS
+   ========================================================================= */
+
+.section-title-wrap {
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto 32px;
+}
+
+.section-title-wrap h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 8px 0;
+}
+
+.section-title-wrap p {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.tech-stack-section {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.tech-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.tech-card {
+  background: rgba(10, 16, 31, 0.7);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+  border-radius: 14px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+}
+
+.tech-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-2px);
+}
+
+.tech-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tech-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.tech-card p {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.tech-role {
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+}
+
+/* Team Grid */
+.team-section {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  margin: 40px auto 60px;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.team-member-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.25s ease;
+}
+
+.team-member-card:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.avatar-placeholder {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 15px;
+  color: #ffffff;
+  background: #0f172a;
+}
+
+.ring-cyan { border: 2px solid #06b6d4; box-shadow: 0 0 12px rgba(6, 182, 212, 0.4); }
+.ring-purple { border: 2px solid #a855f7; box-shadow: 0 0 12px rgba(168, 85, 247, 0.4); }
+.ring-emerald { border: 2px solid #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.4); }
+.ring-blue { border: 2px solid #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.4); }
+.ring-amber { border: 2px solid #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
+
+.member-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-handle {
+  font-size: 11px;
+  font-family: monospace;
+  color: #38bdf8;
+  margin-bottom: 6px;
+}
+
+.member-role {
+  font-size: 10px;
+  font-family: monospace;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
