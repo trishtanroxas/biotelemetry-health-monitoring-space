@@ -497,7 +497,7 @@ input[type=range] { min-height: 44px; }
 .quick-action h3 { margin-top: 16px; }
 .quick-action p, .text-link { font-size: 14px; }
 .helper { font-size: 13px; }
-.checkin-workspace { max-width: 850px; margin: 0 auto; }
+.checkin-workspace { max-width: 100%; margin: 0; }
 .checkin-form fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .wizard-progress { margin-bottom: 28px; }
 .wizard-progress > span { color: var(--muted); font-size: 13px; }
@@ -532,9 +532,9 @@ input[type=range] { min-height: 44px; }
 .activity-action .button { width: 100%; }
 .activity-group-heading { margin-bottom: 18px; font-size: 16px; }
 .disclosure-content .mission-category:last-child { margin-bottom: 0; }
-.assistant-layout.assistant-focused { grid-template-columns: minmax(0, 1fr); max-width: 950px; margin: 0 auto; }
-.assistant-focused .chat-scroll { min-height: 280px; max-height: 520px; }
-.assistant-focused .chat-welcome { text-align: left; margin: 0 auto; max-width: 640px; }
+.assistant-layout.assistant-focused { grid-template-columns: minmax(0, 1fr); max-width: 100%; margin: 0; }
+.assistant-focused .chat-scroll { min-height: 320px; max-height: 600px; }
+.assistant-focused .chat-welcome { text-align: left; margin: 0; max-width: 100%; }
 .assistant-focused .chat-welcome h2 { font-size: 20px; }
 .assistant-focused .suggested-questions { grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 20px; }
 .assistant-focused .suggested-questions button { font-size: 14px; min-height: 52px; padding: 14px 16px; }
