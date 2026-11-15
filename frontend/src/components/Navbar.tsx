@@ -1,5 +1,7 @@
 import React from 'react';
-import { Radio, Wifi, WifiOff, Volume2, VolumeX, Eye, RefreshCw } from 'lucide-react';
+import { Radio, Wifi, WifiOff, Volume2, VolumeX, Eye, RefreshCw, Satellite } from 'lucide-react';
+
+export type MissionDestination = 'ISS' | 'MOON' | 'MARS';
 
 interface NavbarProps {
   isOfflineMode: boolean;
@@ -11,6 +13,8 @@ interface NavbarProps {
   onToggleHighContrast: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
+  missionDestination: MissionDestination;
+  onChangeDestination: (dest: MissionDestination) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,10 +26,25 @@ export const Navbar: React.FC<NavbarProps> = ({
   highContrast,
   onToggleHighContrast,
   soundEnabled,
-  onToggleSound
+  onToggleSound,
+  missionDestination,
+  onChangeDestination
 }) => {
+  const getLatencyLabel = () => {
+    switch (missionDestination) {
+      case 'ISS':
+        return { label: 'LEO / ISS', delay: '50 ms (Real-time Earth Doctor)', badge: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' };
+      case 'MOON':
+        return { label: 'Artemis / Moon', delay: '1.3 sec delay', badge: 'border-cyan-500/40 text-cyan-400 bg-cyan-500/10' };
+      case 'MARS':
+        return { label: 'Mars Transit', delay: '14 min delay (Autonomous Edge Active)', badge: 'border-purple-500/40 text-purple-400 bg-purple-500/10' };
+    }
+  };
+
+  const latencyInfo = getLatencyLabel();
+
   return (
-    <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur px-4 py-3 sticky top-0 z-40">
+    <header className="border-b border-slate-800 bg-slate-950/90 backdrop-blur px-4 py-3 sticky top-0 z-40 shadow-xl">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
         {/* Brand / Mission Header */}
         <div className="flex items-center gap-3">
@@ -38,13 +57,37 @@ export const Navbar: React.FC<NavbarProps> = ({
                 AstroTelemetry
               </span>
               <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                PWA v1.0
+                PWA v1.2
               </span>
             </div>
             <p className="text-xs text-slate-400 hidden sm:block">
               NASA International Space Apps Challenge • Mission Health Gateway
             </p>
           </div>
+        </div>
+
+        {/* Deep Space Latency Simulator Selector */}
+        <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1 px-2 text-[11px] font-mono text-slate-400">
+            <Satellite className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="hidden md:inline">Mission Link:</span>
+          </div>
+          {(['ISS', 'MOON', 'MARS'] as MissionDestination[]).map((dest) => (
+            <button
+              key={dest}
+              onClick={() => onChangeDestination(dest)}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all ${
+                missionDestination === dest
+                  ? 'bg-cyan-500/20 border border-cyan-400 text-cyan-300 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {dest}
+            </button>
+          ))}
+          <span className={`hidden lg:inline text-[10px] font-mono px-2 py-0.5 rounded border ml-1 ${latencyInfo.badge}`}>
+            {latencyInfo.delay}
+          </span>
         </div>
 
         {/* Status Indicators & Accessibility Controls */}
@@ -109,4 +152,3 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
-
